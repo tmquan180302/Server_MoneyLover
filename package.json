@@ -1,0 +1,35 @@
+{
+  "name": "server_moneylover",
+  "version": "1.0.0",
+  "main": "app.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tmquan180302/Server_MoneyLover.git"
+  },
+  "keywords": [
+    "moneylover"
+  ],
+  "author": "quantm183",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tmquan180302/Server_MoneyLover/issues"
+  },
+  "homepage": "https://github.com/tmquan180302/Server_MoneyLover#readme",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.4.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.1.1",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.0.3",
+    "path": "^0.12.7"
+  }
+}
