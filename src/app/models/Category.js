@@ -2,35 +2,31 @@ const mongoose = require('mongoose');
 
 const schema = mongoose.Schema;
 
-const transactionSchema = new schema({
+const categorySchema = new schema({
 
     user: {
         type: mongoose.Schema.Types.ObjectId, ref: 'User',
-        require: true
-    },
-    category: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Category',
         require: true
     },
     type: {
         type: String,
         require: true
     },
-    day: {
+    name: {
         type: String,
         require: true
     },
-    note: {
+    icon: {
         type: String,
         require: true
     },
-    price: {
+    color: {
         type: String,
         require: true
     },
 
 });
 
-const Transaction = mongoose.model('Transaction', transactionSchema);
+const Category = mongoose.model('Category', categorySchema);
 
-module.exports = Transaction;
+module.exports = Category;
