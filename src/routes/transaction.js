@@ -5,6 +5,7 @@ const transactionController = require('../app/controllers/TransactionController'
 const { authenToken } = require('../middlewares/auth');
 
 router.get('/getAll',authenToken, transactionController.showAll);
+
 router.get('/:id', transactionController.show);
 router.post('/create', authenToken, transactionController.create);
 router.post('/update', transactionController.update);

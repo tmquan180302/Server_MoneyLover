@@ -7,6 +7,7 @@ const userSchema = new schema({
     email: {
         type: String,
         require: true,
+        unique: true,
     },
     passWord: {
         type: String,

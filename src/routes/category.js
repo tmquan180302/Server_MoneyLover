@@ -6,6 +6,7 @@ const { authenToken } = require('../middlewares/auth');
 
 
 router.get('/getAll', authenToken, categoryController.showAll);
+
 router.get('/:id', categoryController.show);
 router.get('/create', authenToken, categoryController.create);
 router.get('/update', categoryController.update);
