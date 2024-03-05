@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const mongooseDelete = require('mongoose-delete');
+const moment = require('moment-timezone');
 
 const schema = mongoose.Schema;
 
@@ -9,7 +11,7 @@ const categorySchema = new schema({
         require: true
     },
     type: {
-        type: String,
+        type: Number,
         require: true
     },
     name: {
@@ -17,14 +19,23 @@ const categorySchema = new schema({
         require: true
     },
     icon: {
-        type: String,
+        type: Number,
         require: true
     },
     color: {
-        type: String,
+        type: Number,
         require: true
     },
+    createdAt: String,
+    updatedAt: String,
 
+},
+    {
+        timestamps: { currentTime: () => moment().tz('Asia/Ho_Chi_Minh').format() },
+    });
+
+categorySchema.plugin(mongooseDelete, {
+    overrideMethods: 'all',
 });
 
 const Category = mongoose.model('Category', categorySchema);

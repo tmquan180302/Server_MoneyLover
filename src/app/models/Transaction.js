@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongooseDelete = require('mongoose-delete');
 
 const schema = mongoose.Schema;
 
@@ -13,7 +14,7 @@ const transactionSchema = new schema({
         require: true
     },
     type: {
-        type: String,
+        type: Number,
         require: true
     },
     day: {
@@ -28,8 +29,18 @@ const transactionSchema = new schema({
         type: String,
         require: true
     },
+    createdAt: String,
+    updatedAt: String,
+},
+    {
+        timestamps: { currentTime: () => moment().tz('Asia/Ho_Chi_Minh').format() },
+    });
 
+transactionSchema.plugin(mongooseDelete, {
+    deletedAt: true,
+    overrideMethods: 'all',
 });
+
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 

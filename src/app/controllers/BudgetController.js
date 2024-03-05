@@ -7,10 +7,8 @@ class BudgetController {
     async showAll(req, res, next) {
 
         try {
-            await Budget.find({user: req.user._id})
-                .then((result) => {
-                    res.json(result);
-                });
+            const data = await Budget.find({ user: req.user._id });
+            res.json(data)
         } catch (err) {
             console.error('Error fetching budget:', err);
             res.status(500).json({ error: 'Internal server error' });
@@ -22,10 +20,8 @@ class BudgetController {
     async show(req, res, next) {
 
         try {
-            await Budget.findById(req.params.id)
-                .then((result) => {
-                    res.json(result);
-                });
+            const budget = await Budget.findOne(req.params.id);
+            res.json(budget)
         } catch (err) {
             console.error('Error fetching budget:', err);
             res.status(500).json({ error: 'Internal server error' });
@@ -62,7 +58,7 @@ class BudgetController {
     //[POST] transaction/update/:id
     async update(req, res, next) {
         const id = req.params.id;
-        const { category, type, dayStart, dayEnd, note, price, frequency  } = req.body;
+        const { category, type, dayStart, dayEnd, note, price, frequency } = req.body;
         const data = {
             category: category,
             type: type,
@@ -74,8 +70,8 @@ class BudgetController {
         }
 
         try {
-            await Budget.findByIdAndUpdate(id, data, { new: true })
-                .then((result) => res.status(200).json(result))
+            const newbudget = await Budget.findOneAndUpdate(id, data, { new: true });
+            res.json(newbudget);
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
@@ -88,10 +84,8 @@ class BudgetController {
 
         try {
             const { id } = req.params;
-            await Budget.findByIdAndDelete({ _id: id }, { new: true })
-                .then((result) => {
-                    res.json(result);
-                });
+            const deletedBudget = await Budget.delete({ _id: id }, { new: true });
+            res.json(deletedBudget);
 
         } catch (err) {
             console.error('Error delete transaction:', err);

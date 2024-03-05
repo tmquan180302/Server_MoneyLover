@@ -5,11 +5,14 @@ const categoryController = require('../app/controllers/CategoryController');
 const { authenToken } = require('../middlewares/auth');
 
 
-router.get('/getAll', authenToken, categoryController.showAll);
+router.get('/', authenToken, categoryController.showAll);
+router.get('/expense', authenToken, categoryController.showExpense);
+router.get('/revenue', authenToken, categoryController.showRevenue);
+
 
 router.get('/:id', categoryController.show);
-router.get('/create', authenToken, categoryController.create);
-router.get('/update', categoryController.update);
+router.post('/create', authenToken, categoryController.create);
+router.post('/update', categoryController.update);
 router.get('/delete', categoryController.destroy);
 
 

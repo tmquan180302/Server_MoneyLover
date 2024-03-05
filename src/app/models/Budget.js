@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongooseDelete = require('mongoose-delete');
 
 const schema = mongoose.Schema;
 
@@ -13,7 +14,7 @@ const budgetSchema = new schema({
         require: true
     },
     type: {
-        type: String,
+        type: Number,
         require: true
     },
     dayStart: {
@@ -36,7 +37,20 @@ const budgetSchema = new schema({
         type: String,
         require: true
     },
+    createdAt: String,
+    updatedAt: String,
+
+},
+    {
+        timestamps: { currentTime: () => moment().tz('Asia/Ho_Chi_Minh').format() },
+    }
+);
+
+budgetSchema.plugin(mongooseDelete, {
+    deletedAt: true,
+    overrideMethods: 'all',
 });
+
 
 const Budget = mongoose.model('Budget', budgetSchema);
 

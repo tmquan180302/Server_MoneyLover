@@ -2,15 +2,40 @@ const Category = require('../models/Category');
 
 class CategoryController {
 
-   
-     //[GET] category/getAll
-     async showAll(req, res, next) {
+
+    //[GET] category/getAll
+    async showAll(req, res, next) {
 
         try {
-            await Category.find({user: req.user._id})
-                .then((result) => {
-                    res.json(result);
-                });
+            const data = await Category.find({ user: req.user._id })
+            res.json(data);
+        } catch (err) {
+            console.error('Error fetching category:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+
+    }
+
+    /// GET /category/expense
+    async showExpense(req, res, next) {
+
+        try {
+            const data = await Category.find({ user: req.user._id , type : 0 })
+            res.json(data);
+        } catch (err) {
+            console.error('Error fetching category:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+
+    }
+
+
+    /// GET /category/revenue
+    async showRevenue(req, res, next) {
+
+        try {
+            const data = await Category.find({ user: req.user._id , type : 0 })
+            res.json(data);
         } catch (err) {
             console.error('Error fetching category:', err);
             res.status(500).json({ error: 'Internal server error' });
@@ -23,10 +48,8 @@ class CategoryController {
     async show(req, res, next) {
 
         try {
-            await Category.findById(req.params.id)
-                .then((result) => {
-                    res.json(result);
-                });
+            const category = await Category.findOne({ _id: req.params.id })
+            res.json(category);
         } catch (err) {
             console.error('Error fetching category:', err);
             res.status(500).json({ error: 'Internal server error' });
@@ -67,9 +90,8 @@ class CategoryController {
         };
 
         try {
-            await Category.findByIdAndUpdate(id, data, { new: true })
-                .then((result) => res.status(200).json(result));
-
+            const category = await Category.updateOne(id, data, { new: true })
+            res.json(category);
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
@@ -82,10 +104,8 @@ class CategoryController {
 
         try {
             const { id } = req.params;
-            await Category.findByIdAndDelete({ _id: id }, { new: true })
-                .then((result) => {
-                    res.json(result);
-                });
+            const deletedCategory = Category.delete({ _id: id }, { new: true });
+            res.json(deletedCategory);
 
         } catch (err) {
             console.error('Error delete category:', err);

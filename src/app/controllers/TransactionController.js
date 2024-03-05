@@ -7,10 +7,8 @@ class TransactionController {
     async showAll(req, res, next) {
 
         try {
-            await Transaction.find({user: req.user._id})
-                .then((result) => {
-                    res.json(result);
-                });
+            const transactions = await Transaction.find({ user: req.user._id })
+            res.status(200).json(transactions);
         } catch (err) {
             console.error('Error fetching Transaction:', err);
             res.status(500).json({ error: 'Internal server error' });
@@ -22,10 +20,8 @@ class TransactionController {
     async show(req, res, next) {
 
         try {
-            await Transaction.findById(req.params.id)
-                .then((result) => {
-                    res.json(result);
-                });
+            const transaction = await Transaction.findById(req.params.id)
+            res.status(200).json(transaction);
         } catch (err) {
             console.error('Error fetching Transaction:', err);
             res.status(500).json({ error: 'Internal server error' });
@@ -69,8 +65,8 @@ class TransactionController {
         }
 
         try {
-            await Transaction.findByIdAndUpdate(id, data, { new: true })
-                .then((result) => res.status(200).json(result))
+            const newTransaction = await Transaction.updateOne(id, data, { new: true });
+            res.status(201).json(newTransaction);
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
@@ -83,10 +79,8 @@ class TransactionController {
 
         try {
             const { id } = req.params;
-            await Transaction.findByIdAndDelete({ _id: id }, { new: true })
-                .then((result) => {
-                    res.json(result);
-                });
+            const deletedTransaction = await Transaction.delete({ _id: id }, { new: true });
+            res.json(deletedTransaction);
 
         } catch (err) {
             console.error('Error delete transaction:', err);

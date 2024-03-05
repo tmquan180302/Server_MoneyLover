@@ -18,22 +18,17 @@ class UserController {
             const { email, passWord } = req.body;
             console.log(email, passWord);
 
-            await User.findOne({ email: email })
-                .then(async (result) => {
-                    if (!result) {
-                        res.status(500).json({ error: 'Internal server error' });
-                    } else if (result) {
-                        let checkPass = await bcrypt.compare(passWord, result.passWord);
-                        if (checkPass == true) {
-                            const acessToken = jwt.sign({ user: result }, process.env.TOKEN_SEC_KEY, { expiresIn: '30m' })
-                            res.json({ token: acessToken });
-                        } else {
-                            res.status(404).json({ error: 'Not Found' });
-                        }
-
-                    }
-                });
-        } catch (err) {
+            const user = await User.findOne({ email: email })
+            if (!user) {
+                res.status(404).json({ error: 'Not Found' });
+            }
+            let checkPass = await bcrypt.compare(passWord, user.passWord);
+            if (checkPass == true) {
+                const acessToken = jwt.sign({ user: user }, process.env.TOKEN_SEC_KEY, { expiresIn: '30m' })
+                res.json({ token: acessToken });
+            }
+        }
+        catch (err) {
             console.error('Error find user:', err);
             res.status(500).json({ error: 'Internal server error' });
         }
@@ -46,15 +41,12 @@ class UserController {
         try {
             const { email } = req.body;
             console.log(email);
-            await User.findOne({ email: email })
-                .then((result) => {
-                    if (!result) {
-                        res.status(500).json({ error: 'Internal server error' });
-                    } else if (result) {
-                        const acessToken = jwt.sign({ user: result }, process.env.TOKEN_SEC_KEY, { expiresIn: '30m' })
-                        res.json({ token: acessToken });
-                    }
-                });
+            const user = await User.findOne({ email: email })
+            if (!user) {
+                res.status(404).json({ error: 'Not found' });
+            }
+            const acessToken = jwt.sign({ user: user }, process.env.TOKEN_SEC_KEY, { expiresIn: '30m' })
+            res.json({ token: acessToken });
         } catch (err) {
             console.error('Error fething user:', err);
             res.status(500).json({ error: 'Internal server error' });
@@ -81,18 +73,15 @@ class UserController {
         try {
             const { oldPassWord, newPassWord } = req.body;
             const hassPass = bcrypt.hashSync(newPassWord, salt);
-            await User.findOne({ _id: req.user })
-                .then(async (result) => {
-                    let checkPass = await bcrypt.compare(oldPassWord, result.passWord);
-                    if (checkPass == true) {
-                        await User.findOneAndUpdate({ _id: req.user }, { passWord: hassPass }, { new: true },)
-                            .then((result) => {
-                                res.json(result);
-                            });
-                    } else {
-                        res.status(404).json({ error: 'Not Found' });
-                    }
-                })
+            const user = await User.findOne({ _id: req.user })
+            if (!user) {
+                res.status(404).json({ error: 'Not Found' });
+            }
+            let checkPass = await bcrypt.compare(oldPassWord, user.passWord);
+            if (checkPass == true) {
+                const userUpdate = await User.findOneAndUpdate({ _id: req.user }, { passWord: hassPass }, { new: true },)
+                res.json(userUpdate);
+            }
 
         } catch (err) {
             console.error('Error fixing user:', err);
