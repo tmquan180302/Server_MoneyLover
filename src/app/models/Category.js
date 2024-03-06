@@ -28,13 +28,13 @@ const categorySchema = new schema({
     },
     createdAt: String,
     updatedAt: String,
-
 },
     {
         timestamps: { currentTime: () => moment().tz('Asia/Ho_Chi_Minh').format() },
     });
 
 categorySchema.plugin(mongooseDelete, {
+    deletedAt: true,
     overrideMethods: 'all',
 });
 

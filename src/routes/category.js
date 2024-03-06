@@ -12,8 +12,8 @@ router.get('/revenue', authenToken, categoryController.showRevenue);
 
 router.get('/:id', categoryController.show);
 router.post('/create', authenToken, categoryController.create);
-router.post('/update', categoryController.update);
-router.get('/delete', categoryController.destroy);
+router.post('/:id/update', categoryController.update);
+router.delete('/:id', categoryController.destroy);
 
 
 

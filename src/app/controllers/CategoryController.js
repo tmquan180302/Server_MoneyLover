@@ -20,7 +20,7 @@ class CategoryController {
     async showExpense(req, res, next) {
 
         try {
-            const data = await Category.find({ user: req.user._id , type : 0 })
+            const data = await Category.find({ user: req.user._id, type: 0 })
             res.json(data);
         } catch (err) {
             console.error('Error fetching category:', err);
@@ -34,7 +34,7 @@ class CategoryController {
     async showRevenue(req, res, next) {
 
         try {
-            const data = await Category.find({ user: req.user._id , type : 0 })
+            const data = await Category.find({ user: req.user._id, type: 1 })
             res.json(data);
         } catch (err) {
             console.error('Error fetching category:', err);
@@ -90,7 +90,7 @@ class CategoryController {
         };
 
         try {
-            const category = await Category.updateOne(id, data, { new: true })
+            const category = await Category.updateOne({ _id: id }, data, { new: true });
             res.json(category);
         } catch (error) {
             res.status(400).json({ message: error.message });
@@ -103,8 +103,9 @@ class CategoryController {
     async destroy(req, res, next) {
 
         try {
-            const { id } = req.params;
-            const deletedCategory = Category.delete({ _id: id }, { new: true });
+            const id = req.params.id;
+            console.log(id);
+            const deletedCategory = await Category.delete({_id : id});
             res.json(deletedCategory);
 
         } catch (err) {

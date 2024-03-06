@@ -40,8 +40,7 @@ class UserController {
     async loginGoogle(req, res, next) {
         try {
             const { email } = req.body;
-            console.log(email);
-            const user = await User.findOne({ email: email })
+            const user = await User.findOne({ email: email });
             if (!user) {
                 res.status(404).json({ error: 'Not found' });
             }
@@ -57,9 +56,9 @@ class UserController {
     async create(req, res, next) {
         try {
             const { email, passWord } = req.body;
-            console.log(passWord);
             const hassPass = bcrypt.hashSync(passWord, salt);
             const data = new User({ email: email, passWord: hassPass });
+
             const user = await data.save()
             res.json(user);
         } catch (err) {
@@ -73,10 +72,12 @@ class UserController {
         try {
             const { oldPassWord, newPassWord } = req.body;
             const hassPass = bcrypt.hashSync(newPassWord, salt);
-            const user = await User.findOne({ _id: req.user })
+            const user = await User.findOne({ _id: req.user });
+
             if (!user) {
                 res.status(404).json({ error: 'Not Found' });
             }
+
             let checkPass = await bcrypt.compare(oldPassWord, user.passWord);
             if (checkPass == true) {
                 const userUpdate = await User.findOneAndUpdate({ _id: req.user }, { passWord: hassPass }, { new: true },)

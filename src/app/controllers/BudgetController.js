@@ -83,7 +83,7 @@ class BudgetController {
     async destroy(req, res, next) {
 
         try {
-            const { id } = req.params;
+            const id  = req.params.id;
             const deletedBudget = await Budget.delete({ _id: id }, { new: true });
             res.json(deletedBudget);
 
