@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const mongooseDelete = require('mongoose-delete');
 const moment = require('moment-timezone');
+const { repeatOptions } = require('../../util/options');
 
 
 const schema = mongoose.Schema;
@@ -25,7 +26,8 @@ const budgetSchema = new schema({
     },
     dayEnd: {
         type: String,
-        require: true
+        require: false,
+        default: null
     },
     note: {
         type: String,
@@ -37,7 +39,8 @@ const budgetSchema = new schema({
     },
     frequency: {
         type: String,
-        require: true
+        enum: repeatOptions,
+        default: 'Never'
     },
     createdAt: String,
     updatedAt: String,
