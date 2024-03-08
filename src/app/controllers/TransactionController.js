@@ -7,7 +7,8 @@ class TransactionController {
     async showAll(req, res, next) {
 
         try {
-            const transactions = await Transaction.find({ user: req.user._id })
+            const transactions = await Transaction.find({ userId: req.userId });
+            console.log("list transaction", transactions);
             res.status(200).json(transactions);
         } catch (err) {
             console.error('Error fetching Transaction:', err);
@@ -35,7 +36,7 @@ class TransactionController {
 
         const { category, type, day, note, price } = req.body;
         const transaction = new Transaction({
-            user: req.user._id,
+            userId: req.userId,
             category: category,
             type: type,
             day: day,
@@ -44,10 +45,11 @@ class TransactionController {
         });
 
         try {
-            const newTransaction = await transaction.save();
-            res.status(201).json(newTransaction);
+            const rs = await transaction.save();
+            console.log(rs)
+            res.status(200).json();
         } catch (error) {
-            res.status(400).json({ message: error.message });
+            res.status(500).json();
         }
 
     }
