@@ -7,7 +7,7 @@ class CategoryController {
     async showAll(req, res, next) {
 
         try {
-            const data = await Category.find({ user: req.user._id })
+            const data = await Category.find({ userId: req.userId })
             res.json(data);
         } catch (err) {
             console.error('Error fetching category:', err);
@@ -20,7 +20,9 @@ class CategoryController {
     async showExpense(req, res, next) {
 
         try {
-            const data = await Category.find({ user: req.user._id, type: 0 })
+            console.log(req.userId)
+            const data = await Category.find({ userId: req.userId, type: 0 });
+            console.log(data)
             res.json(data);
         } catch (err) {
             console.error('Error fetching category:', err);
@@ -34,7 +36,7 @@ class CategoryController {
     async showRevenue(req, res, next) {
 
         try {
-            const data = await Category.find({ user: req.user._id, type: 1 })
+            const data = await Category.find({ userId: req.userId, type: 1 })
             res.json(data);
         } catch (err) {
             console.error('Error fetching category:', err);
@@ -62,7 +64,7 @@ class CategoryController {
 
         const { type, name, icon, color } = req.body;
         const category = new Category({
-            user: req.user._id,
+            userId: req.userId,
             type: type,
             name: name,
             icon: icon,
@@ -71,9 +73,9 @@ class CategoryController {
 
         try {
             const newCategory = await category.save();
-            res.status(201).json(newCategory);
+            res.status(201).json("Thêm thành công");
         } catch (error) {
-            res.status(400).json({ message: error.message });
+            res.status(400).json(error.message);
         }
 
     }
@@ -91,9 +93,9 @@ class CategoryController {
 
         try {
             const category = await Category.updateOne({ _id: id }, data, { new: true });
-            res.json(category);
+            res.status(200).json("Cập nhật thành công");
         } catch (error) {
-            res.status(400).json({ message: error.message });
+            res.status(400).json(error.message);
         }
 
     }
@@ -105,8 +107,9 @@ class CategoryController {
         try {
             const id = req.params.id;
             console.log(id);
-            const deletedCategory = await Category.delete({_id : id});
-            res.json(deletedCategory);
+            const deletedCategory = await Category.deleteOne({ _id: id });
+            console.log(deletedCategory);
+            res.json(deletedCategory.deletedCount == 1 );
 
         } catch (err) {
             console.error('Error delete category:', err);

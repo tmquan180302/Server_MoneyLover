@@ -6,7 +6,7 @@ const schema = mongoose.Schema;
 
 const categorySchema = new schema({
 
-    user: {
+    userId: {
         type: mongoose.Schema.Types.ObjectId, ref: 'User',
         require: true
     },

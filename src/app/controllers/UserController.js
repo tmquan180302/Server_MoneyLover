@@ -24,7 +24,7 @@ class UserController {
             }
             let checkPass = await bcrypt.compare(passWord, user.passWord);
             if (checkPass == true) {
-                const acessToken = jwt.sign({ user: user }, process.env.TOKEN_SEC_KEY, { expiresIn: '30m' })
+                const acessToken = await jwt.sign({ user: user }, process.env.TOKEN_SEC_KEY)
                 res.json({ token: acessToken });
             }
         }

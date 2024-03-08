@@ -10,10 +10,10 @@ router.get('/expense', authenToken, categoryController.showExpense);
 router.get('/revenue', authenToken, categoryController.showRevenue);
 
 
-router.get('/:id', categoryController.show);
+router.get('/:id',authenToken, categoryController.show);
 router.post('/create', authenToken, categoryController.create);
-router.post('/:id/update', categoryController.update);
-router.delete('/:id', categoryController.destroy);
+router.post('/:id/update',authenToken, categoryController.update);
+router.delete('/:id',authenToken, categoryController.destroy);
 
 
 

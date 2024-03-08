@@ -7,12 +7,12 @@ const schema = mongoose.Schema;
 
 const transactionSchema = new schema({
 
-    user: {
+    userId: {
         type: mongoose.Schema.Types.ObjectId, ref: 'User',
         require: true
     },
     category: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Category',
+        type: Object,
         require: true
     },
     type: {
@@ -20,7 +20,7 @@ const transactionSchema = new schema({
         require: true
     },
     day: {
-        type: String,
+        type: Number,
         require: true
     },
     note: {
@@ -28,7 +28,7 @@ const transactionSchema = new schema({
         require: true
     },
     price: {
-        type: String,
+        type: Number,
         require: true
     },
     createdAt: String,
