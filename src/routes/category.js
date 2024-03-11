@@ -16,4 +16,5 @@ router.post('/:id/update',authenToken, categoryController.update);
 router.delete('/:id',authenToken, categoryController.destroy);
 
 
+
 module.exports = router;

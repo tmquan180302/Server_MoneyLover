@@ -17,6 +17,10 @@ router.get('/:startDay/:endDay', authenToken, budgetController.getCalendar);
 //Lấy dữ liệu màn Report
 router.get('/:startDay/:endDay/:type',authenToken, budgetController.getReport);
 
+//Tìm kiếm
+router.post('/find',authenToken, budgetController.searchAll);
+
+
 
 
 module.exports = router;
