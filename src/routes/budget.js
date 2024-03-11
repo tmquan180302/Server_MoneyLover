@@ -14,7 +14,7 @@ router.delete('/:id', authenToken, budgetController.destroy);
 //Lấy dữ liệu màn Calendar
 // http://localhost:3000/budget/1709251200000/1711843200000
 router.get('/:startDay/:endDay',authenToken, budgetController.getCalendar);
-router.get('/:startDay/:endDay/:type', budgetController.getReport);
+router.get('/:startDay/:endDay/:type',authenToken, budgetController.getReport);
 
 
 
