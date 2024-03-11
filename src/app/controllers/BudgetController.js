@@ -722,6 +722,7 @@ class BudgetController {
 
             });
 
+            // Lấy budget của tháng 
             const filteredRecords = newBudgets.filter(budget => {
                 return budget.dayStart >= startDay && budget.dayStart <= endDay;
             });
@@ -737,6 +738,7 @@ class BudgetController {
                 }
             });
 
+            // Cùng ngày
             const merge = [...filteredRecords, ...transactions];
             const group = new Map();
 
@@ -751,12 +753,16 @@ class BudgetController {
             });
 
             const groupDay = Array.from(group.values());
+            // ----------------------------------------------------------------
 
+
+            // Lấy tổng ngày tổng tháng
             let dayExpense = 0;
             let dayRevenue = 0;
             let monthExpense = 0;
             let monthRevenue = 0;
 
+            // Ngày
             groupDay.forEach(arr => {
                 arr.forEach(item => {
                     if (item.type == 0) {
@@ -771,14 +777,14 @@ class BudgetController {
                 dayExpense = 0;
                 dayRevenue = 0;
             });
-
+            // Tháng
             groupDay.forEach(arr => {
                 arr.forEach(item => {
                     monthExpense += item.dayExpense || 0;
                     monthRevenue += item.dayRevenue || 0;
                 });
             });
-
+            // Số Dư tháng
             groupDay.forEach(arr => {
                 arr[0].monthExpense = monthExpense
                 arr[0].monthRevenue = monthRevenue
@@ -786,7 +792,7 @@ class BudgetController {
             })
 
 
-
+            // Response phần mobile
             const result = {
                 expense: monthExpense,
                 revenue: monthRevenue,
@@ -804,16 +810,20 @@ class BudgetController {
 
                     const { category, price } = item;
                     if (category && category._id) {
-                        const { _id, icon, color } = category;
+
+                        const { _id, name, type, icon, color } = category;
 
                         if (categoryTotals[_id]) {
                             categoryTotals[_id].total += price;
+
                         } else {
                             categoryTotals[_id] = {
                                 _id,
+                                name,
+                                type,
                                 icon,
                                 color,
-                                total: price
+                                total: price,
                             };
                         }
                     }
@@ -824,6 +834,14 @@ class BudgetController {
                 result.category.push(categoryTotal);
             });
 
+            result.category.forEach(item => {
+                if (item.type === 0) {
+                    item.percent = (item.total / result.expense) * 100;
+                } else if (item.type === 1) {
+                    item.percent = (item.total / result.revenue) * 100;
+                }
+            });
+
 
             res.json(result);
         } catch (error) {
@@ -832,8 +850,9 @@ class BudgetController {
         }
     }
 
-
-
+    async showEm(req, res) {
+        res.json ('ok');
+    }
 
 }
 

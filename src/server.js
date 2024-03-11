@@ -21,6 +21,7 @@ app.use(morgan('tiny'));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/src/resources/views');
 
+
 route(app);
 
 app.listen(PORT, console.log(`Server listening on ${PORT}`));
