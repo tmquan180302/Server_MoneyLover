@@ -9,7 +9,6 @@ const repeatOptions = [
     'Bimonthly',
     'Trimonthly',
     'Quadmonthly',
-    'Quinmonthly',
     'Semiannually',
     'Annually'
 ];

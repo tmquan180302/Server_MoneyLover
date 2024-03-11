@@ -8,12 +8,12 @@ const schema = mongoose.Schema;
 
 const budgetSchema = new schema({
 
-    user: {
+    userId: {
         type: mongoose.Schema.Types.ObjectId, ref: 'User',
         require: true
     },
     category: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Category',
+        type: Object,
         require: true
     },
     type: {
@@ -21,11 +21,11 @@ const budgetSchema = new schema({
         require: true
     },
     dayStart: {
-        type: String,
+        type: Number,
         require: true
     },
     dayEnd: {
-        type: String,
+        type: Number,
         require: false,
         default: null
     },
@@ -34,7 +34,7 @@ const budgetSchema = new schema({
         require: true
     },
     price: {
-        type: String,
+        type: Number,
         require: true
     },
     frequency: {
