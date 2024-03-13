@@ -72,7 +72,7 @@ class CategoryController {
         });
 
         try {
-            const newCategory = await category.save();
+            await category.save();
             res.status(201).json("Thêm thành công");
         } catch (error) {
             res.status(400).json(error.message);
@@ -92,7 +92,7 @@ class CategoryController {
         };
 
         try {
-            const category = await Category.updateOne({ _id: id }, data, { new: true });
+            await Category.updateOne({ _id: id }, data, { new: true });
             res.status(200).json("Cập nhật thành công");
         } catch (error) {
             res.status(400).json(error.message);
@@ -109,7 +109,7 @@ class CategoryController {
             console.log(id);
             const deletedCategory = await Category.deleteOne({ _id: id });
             console.log(deletedCategory);
-            res.json(deletedCategory.deletedCount == 1 );
+            res.json(deletedCategory.deletedCount == 1);
 
         } catch (err) {
             console.error('Error delete category:', err);

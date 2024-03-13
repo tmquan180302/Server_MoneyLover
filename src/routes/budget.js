@@ -4,6 +4,13 @@ const router = express.Router();
 const budgetController = require('../app/controllers/BudgetController');
 const { authenToken } = require('../middlewares/auth');
 
+
+// Báo cáo toàn kì
+router.get('/allTimeReport', authenToken, budgetController.getAllTimeReport);
+
+// Lấy dữ liệu các bản ghi theo danh mục (Phần onlick của của báo cáo)
+router.get('/:id/report', authenToken, budgetController.getCateroryReport);
+
 // Gửi lên req là key
 router.post('/find', authenToken, budgetController.searchAll);
 

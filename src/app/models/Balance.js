@@ -5,41 +5,31 @@ const moment = require('moment-timezone');
 
 const schema = mongoose.Schema;
 
-const transactionSchema = new schema({
+const balanceSchema = new schema({
 
     userId: {
         type: mongoose.Schema.Types.ObjectId, ref: 'User',
         require: true
     },
-    category: {
-        type: Object,
-        require: true
-    },
-    day: {
-        type: Number,
-        require: true
-    },
-    note: {
-        type: String,
-        require: true
-    },
     price: {
         type: Number,
-        require: true
+        required: true,
+        default: 0
     },
     createdAt: String,
     updatedAt: String,
+
 },
     {
         timestamps: { currentTime: () => moment().tz('Asia/Ho_Chi_Minh').format() },
+
     });
 
-transactionSchema.plugin(mongooseDelete, {
+balanceSchema.plugin(mongooseDelete, {
     deletedAt: true,
     overrideMethods: 'all',
 });
 
+const Balance = mongoose.model('Balance', balanceSchema);
 
-const Transaction = mongoose.model('Transaction', transactionSchema);
-
-module.exports = Transaction;
+module.exports = Balance;

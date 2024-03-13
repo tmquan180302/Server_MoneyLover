@@ -16,10 +16,6 @@ const budgetSchema = new schema({
         type: Object,
         require: true
     },
-    type: {
-        type: Number,
-        require: true
-    },
     dayStart: {
         type: Number,
         require: true

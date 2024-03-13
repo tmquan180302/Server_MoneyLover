@@ -2,6 +2,7 @@ const { repeatOptions } = require('../../util/options');
 const Budget = require('../models/Budget');
 const moment = require('moment-timezone');
 const Transaction = require('../models/Transaction');
+const Balance = require('../models/Balance');
 
 
 class BudgetController {
@@ -59,7 +60,6 @@ class BudgetController {
 
     }
 
-    //[POST] transaction/update/:id
     async update(req, res, next) {
         const id = req.params.id;
         const { category, type, dayStart, dayEnd, note, price, frequency } = req.body;
@@ -82,7 +82,6 @@ class BudgetController {
 
     }
 
-    //[DELETE] transaction/delete
 
     async destroy(req, res, next) {
 
@@ -97,7 +96,7 @@ class BudgetController {
         }
     }
 
-
+    // [GET] 
     async getCalendar(req, res) {
         try {
             const { startDay, endDay } = req.params;
@@ -2028,6 +2027,680 @@ class BudgetController {
         }
     }
 
+
+    async getCateroryReport(req, res) {
+        try {
+            const { id } = req.params;
+            const today = moment().startOf('day');
+
+            const budgets = await Budget.find({
+                userId: req.userId
+            });
+            const transactions = await Transaction.find({
+                userId: req.userId,
+            },);
+
+
+
+
+            const newBudgets = [];
+            budgets.forEach(budget => {
+
+                const { frequency } = budget;
+
+                if (repeatOptions.includes(frequency)) {
+                    const budgetStart = moment(budget.dayStart);
+
+
+                    switch (frequency) {
+                        case 'Daily':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'day');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'day');
+                                }
+                            }
+                            break;
+                        case 'Weekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'week');
+                                }
+                            }
+                            break;
+                        case 'Biweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'week');
+                                }
+                            }
+                            break;
+                        case 'Triweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'week');
+                                }
+                            }
+                            break;
+                        case 'Quadweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'week');
+                                }
+                            }
+                            break;
+
+                        case 'Monthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'month');
+                                }
+                            }
+                            break;
+                        case 'Bimonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'month');
+                                }
+                            }
+                            break;
+                        case 'Trimonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'month');
+                                }
+                            }
+                            break;
+                        case 'Quadmonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'month');
+                                }
+                            }
+                            break;
+                        case 'Quinmonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(5, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(5, 'month');
+                                }
+                            }
+                            break;
+                        case 'Semiannually':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(6, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(6, 'month');
+                                }
+                            }
+                            break;
+                        case 'Annually':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'year');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'year');
+                                }
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+            });
+
+
+            newBudgets.forEach(budget => {
+                delete budget.deleted;
+                delete budget.createdAt;
+                delete budget.updatedAt;
+                if (budget.hasOwnProperty("dayStart")) {
+                    budget.day = budget.dayStart;
+                    delete budget.dayStart;
+
+                }
+            });
+            // Lọc Bản ghi theo id 
+            const filteredBudgets = newBudgets.filter(budget => {
+                return budget.category._id == id;
+            });
+
+            const filteredTransactions = transactions.filter(transaction => {
+                return transaction.category._id == id;
+            });
+            const merge = [...filteredBudgets, ...filteredTransactions];
+
+            merge.sort((a, b) => a.day - b.day);
+
+            const groupedByDay = {};
+            // Gộp ngày
+            merge.forEach(record => {
+                const day = moment(record.day).format('DD-MM-YYYY');
+
+                if (groupedByDay.hasOwnProperty(day)) {
+                    groupedByDay[day].push(record);
+                } else {
+                    groupedByDay[day] = [record];
+                }
+            });
+
+
+            const groupedByMonth = {};
+            // Gộp ngày
+            merge.forEach(record => {
+                const month = moment(record.day).format('MM-YYYY');
+
+                if (groupedByMonth.hasOwnProperty(month)) {
+                    groupedByMonth[month].push(record);
+                } else {
+                    groupedByMonth[month] = [record];
+                }
+            });
+
+
+            function calculateTotal(expenses) {
+                let total = 0;
+                for (const expense of expenses) {
+                    total += expense.price;
+                }
+                return total;
+            }
+
+            function calculateMonthlyTotal(data) {
+                const monthlyTotal = {};
+                for (const month in data) {
+                    const expenses = data[month];
+                    monthlyTotal[month] = calculateTotal(expenses);
+                }
+                return monthlyTotal;
+            }
+
+            const monthlyTotal = calculateMonthlyTotal(groupedByMonth);
+            console.log("Tổng giá trị theo tháng:");
+            console.log(monthlyTotal);
+
+
+            res.json({ month: monthlyTotal, day: groupedByDay });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    }
+
+
+
+    async getAllTimeReport(req, res) {
+        try {
+
+
+            const today = moment().startOf('day');
+            const budgets = await Budget.find({
+                userId: req.userId,
+
+            });
+
+            const transactions = await Transaction.find({
+                userId: req.userId,
+            },);
+
+            const balance = await Balance.findOne({
+                userId: req.userId,
+            },);
+
+
+            // Tạo budget con 
+            const newBudgets = [];
+            budgets.forEach(budget => {
+
+                const { frequency } = budget;
+
+                if (repeatOptions.includes(frequency)) {
+                    const budgetStart = moment(budget.dayStart);
+
+
+                    switch (frequency) {
+                        case 'Daily':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'day');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'day');
+                                }
+                            }
+                            break;
+                        case 'Weekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'week');
+                                }
+                            }
+                            break;
+                        case 'Biweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'week');
+                                }
+                            }
+                            break;
+                        case 'Triweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'week');
+                                }
+                            }
+                            break;
+                        case 'Quadweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'week');
+                                }
+                            }
+                            break;
+
+                        case 'Monthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'month');
+                                }
+                            }
+                            break;
+                        case 'Bimonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'month');
+                                }
+                            }
+                            break;
+                        case 'Trimonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'month');
+                                }
+                            }
+                            break;
+                        case 'Quadmonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'month');
+                                }
+                            }
+                            break;
+                        case 'Quinmonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(5, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(5, 'month');
+                                }
+                            }
+                            break;
+                        case 'Semiannually':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(6, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(6, 'month');
+                                }
+                            }
+                            break;
+                        case 'Annually':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'year');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'year');
+                                }
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+            });
+            //------------------------------
+
+
+            newBudgets.forEach(budget => {
+                delete budget.deleted;
+                delete budget.createdAt;
+                delete budget.updatedAt;
+                if (budget.hasOwnProperty("dayStart")) {
+                    budget.day = budget.dayStart;
+                    delete budget.dayStart;
+
+                }
+            });
+
+
+            const merge = [...newBudgets, ...transactions];
+
+
+            const totals = {};
+
+            merge.forEach(record => {
+
+                const type = record.category.type === 0 ? 'expense' : 'revenue';
+
+                if (!totals[type]) {
+
+                    totals[type] = 0;
+                }
+                totals[type] += record.price;
+            });
+            totals["total"] = totals["revenue"] - totals["expense"];
+            totals["balance"] = balance.price;
+            totals["cumulation"] = totals["total"] + totals["balance"];
+
+            res.json(totals);
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    }
 }
 
 module.exports = new BudgetController();
