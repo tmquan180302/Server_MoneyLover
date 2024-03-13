@@ -387,64 +387,69 @@ class BudgetController {
             });
 
             const merge = [...filteredRecords, ...transactions];
-            const group = new Map();
 
-            merge.forEach(obj => {
-                const day = moment(obj.day).format('YYYY-MM-DD');
-                if (!group.has(day)) {
-                    group.set(day, [{ dayExpense: 0, dayRevenue: 0, monthExpense: 0, monthRevenue: 0, total: 0 }]);
+            merge.sort((a, b) => a.day - b.day);
 
+            const groupedByDay = {};
+
+            merge.forEach(record => {
+                const day = moment(record.day).format('DD-MM-YYYY');
+
+                if (groupedByDay.hasOwnProperty(day)) {
+                    groupedByDay[day].push(record);
+                } else {
+                    groupedByDay[day] = [record];
                 }
-                group.get(day).push(obj);
-
             });
 
-            const groupDay = Array.from(group.values());
 
-            let dayExpense = 0;
-            let dayRevenue = 0;
-            let monthExpense = 0;
-            let monthRevenue = 0;
 
-            groupDay.forEach(arr => {
-                arr.forEach(item => {
-                    if (item.type == 0) {
-                        dayExpense += item.price;
-                    } else if (item.type == 1) {
-                        dayRevenue += item.price;
+            Object.keys(groupedByDay).forEach(day => {
+
+                const totalPriceByType = {};
+
+                groupedByDay[day].forEach(record => {
+                    const categoryType = record.category.type === 0 ? 'expense' : 'revenue';
+
+                    if (totalPriceByType.hasOwnProperty(categoryType)) {
+
+                        totalPriceByType[categoryType] += record.price;
+                    } else {
+
+                        totalPriceByType[categoryType] = record.price;
                     }
+
                 });
-                arr[0].dayExpense = dayExpense;
-                arr[0].dayRevenue = dayRevenue;
-
-                dayExpense = 0;
-                dayRevenue = 0;
-
-
+                groupedByDay[day].push(totalPriceByType);
             });
 
-            groupDay.forEach(arr => {
-                arr.forEach(item => {
-                    monthExpense += item.dayExpense || 0;
-                    monthRevenue += item.dayRevenue || 0;
+            let totalExpense = 0;
+            let totalRevenue = 0;
+
+            Object.keys(groupedByDay).forEach(day => {
+
+                groupedByDay[day].forEach(record => {
+
+                    if (record.revenue) {
+                        totalRevenue += record.revenue;
+                    } else if (record.expense) {
+                        totalExpense += record.expense;
+                    }
+
                 });
+
             });
+            groupedByDay.totalRevenue = totalRevenue;
+            groupedByDay.totalExpense = totalExpense;
+            groupedByDay.total = totalRevenue - totalExpense;
 
-            console.log(monthExpense, monthRevenue);
-
-            groupDay.forEach(arr => {
-                arr[0].monthExpense = monthExpense
-                arr[0].monthRevenue = monthRevenue
-                arr[0].total = monthRevenue - monthExpense
-            })
-
-
-            res.json(groupDay);
+            res.json(groupedByDay);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Internal Server Error' });
         }
     }
+
 
 
     async getReport(req, res) {
@@ -453,13 +458,11 @@ class BudgetController {
             const today = moment().startOf('day');
 
             const budgets = await Budget.find({
-                userId: req.userId,
-
+                userId: req.userId
             });
             const transactions = await Transaction.find({
                 userId: req.userId,
-                day: { $gte: startDay, $lte: endDay },
-                type: type,
+                day: { $gte: startDay, $lte: endDay }
             },);
 
 
@@ -722,7 +725,6 @@ class BudgetController {
 
             });
 
-            // Lấy budget của tháng 
             const filteredRecords = newBudgets.filter(budget => {
                 return budget.dayStart >= startDay && budget.dayStart <= endDay;
             });
@@ -738,77 +740,78 @@ class BudgetController {
                 }
             });
 
-            // Cùng ngày
             const merge = [...filteredRecords, ...transactions];
-            const group = new Map();
 
-            merge.forEach(obj => {
-                const day = moment(obj.day).format('YYYY-MM-DD');
-                if (!group.has(day)) {
-                    group.set(day, [{ dayExpense: 0, dayRevenue: 0, monthExpense: 0, monthRevenue: 0, total: 0 }]);
+            merge.sort((a, b) => a.day - b.day);
 
+            const groupedByDay = {};
+
+            merge.forEach(record => {
+                const day = moment(record.day).format('DD-MM-YYYY');
+
+                if (groupedByDay.hasOwnProperty(day)) {
+                    groupedByDay[day].push(record);
+                } else {
+                    groupedByDay[day] = [record];
                 }
-                group.get(day).push(obj);
+            });
+
+
+
+            Object.keys(groupedByDay).forEach(day => {
+
+                const totalPriceByType = {};
+
+                groupedByDay[day].forEach(record => {
+                    const categoryType = record.category.type === 0 ? 'expense' : 'revenue';
+
+                    if (totalPriceByType.hasOwnProperty(categoryType)) {
+
+                        totalPriceByType[categoryType] += record.price;
+                    } else {
+
+                        totalPriceByType[categoryType] = record.price;
+                    }
+
+                });
+                groupedByDay[day].push(totalPriceByType);
+            });
+
+            let totalExpense = 0;
+            let totalRevenue = 0;
+
+            Object.keys(groupedByDay).forEach(day => {
+
+                groupedByDay[day].forEach(record => {
+
+                    if (record.revenue) {
+                        totalRevenue += record.revenue;
+                    } else if (record.expense) {
+                        totalExpense += record.expense;
+                    }
+
+                });
 
             });
 
-            const groupDay = Array.from(group.values());
-            // ----------------------------------------------------------------
-
-
-            // Lấy tổng ngày tổng tháng
-            let dayExpense = 0;
-            let dayRevenue = 0;
-            let monthExpense = 0;
-            let monthRevenue = 0;
-
-            // Ngày
-            groupDay.forEach(arr => {
-                arr.forEach(item => {
-                    if (item.type == 0) {
-                        dayExpense += item.price;
-                    } else if (item.type === 1) {
-                        dayRevenue += item.price;
+            function filterRecords(data) {
+                const filteredData = {};
+                Object.entries(data).forEach(([date, records]) => {
+                    const filteredRecords = records.filter(record => record.category && record.category.type == type);
+                    if (filteredRecords.length > 0) {
+                        filteredData[date] = filteredRecords;
                     }
                 });
-                arr[0].dayExpense = dayExpense;
-                arr[0].dayRevenue = dayRevenue;
+                return filteredData;
+            }
 
-                dayExpense = 0;
-                dayRevenue = 0;
-            });
-            // Tháng
-            groupDay.forEach(arr => {
-                arr.forEach(item => {
-                    monthExpense += item.dayExpense || 0;
-                    monthRevenue += item.dayRevenue || 0;
-                });
-            });
-            // Số Dư tháng
-            groupDay.forEach(arr => {
-                arr[0].monthExpense = monthExpense
-                arr[0].monthRevenue = monthRevenue
-                arr[0].total = monthRevenue - monthExpense
-            })
-
-
-            // Response phần mobile
-            const result = {
-                expense: monthExpense,
-                revenue: monthRevenue,
-                total: monthRevenue - monthExpense,
-                category: []
-            };
-
+            const filteredData = filterRecords(groupedByDay);
             const categoryTotals = {};
 
-            console.log(type);
-            const dataWithTypeZero = groupDay.map(group => group.filter(entry => entry.type === parseInt(type)));
-
-            dataWithTypeZero.forEach(function (arr) {
-                arr.forEach(item => {
-
+            Object.values(filteredData).forEach(record => {
+                record.forEach(item => {
                     const { category, price } = item;
+
                     if (category && category._id) {
 
                         const { _id, name, type, icon, color } = category;
@@ -827,21 +830,20 @@ class BudgetController {
                             };
                         }
                     }
-                });
+                })
+
             });
+
+            const result = {
+                expense: totalRevenue,
+                revenue: totalExpense,
+                total: totalRevenue - totalExpense,
+                category: []
+            };
 
             Object.values(categoryTotals).forEach(categoryTotal => {
                 result.category.push(categoryTotal);
             });
-
-            result.category.forEach(item => {
-                if (item.type === 0) {
-                    item.percent = (item.total / result.expense) * 100;
-                } else if (item.type === 1) {
-                    item.percent = (item.total / result.revenue) * 100;
-                }
-            });
-
 
             res.json(result);
         } catch (error) {
@@ -850,14 +852,433 @@ class BudgetController {
         }
     }
 
-    async searchAll(req, res) {
+
+
+    async getYearReport(req, res) {
         try {
-            const { key } = req.body;
+            const { startDay, endDay, type } = req.params;
             const today = moment().startOf('day');
 
             const budgets = await Budget.find({
                 userId: req.userId,
 
+            });
+
+            const transactions = await Transaction.find({
+                userId: req.userId,
+                day: { $gte: startDay, $lte: endDay },
+            },);
+
+            // Tạo budget con 
+            const newBudgets = [];
+            budgets.forEach(budget => {
+
+                const { frequency } = budget;
+
+                if (repeatOptions.includes(frequency)) {
+                    const budgetStart = moment(budget.dayStart);
+
+
+                    switch (frequency) {
+                        case 'Daily':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'day');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'day');
+                                }
+                            }
+                            break;
+                        case 'Weekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'week');
+                                }
+                            }
+                            break;
+                        case 'Biweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'week');
+                                }
+                            }
+                            break;
+                        case 'Triweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'week');
+                                }
+                            }
+                            break;
+                        case 'Quadweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'week');
+                                }
+                            }
+                            break;
+
+                        case 'Monthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'month');
+                                }
+                            }
+                            break;
+                        case 'Bimonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'month');
+                                }
+                            }
+                            break;
+                        case 'Trimonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'month');
+                                }
+                            }
+                            break;
+                        case 'Quadmonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'month');
+                                }
+                            }
+                            break;
+                        case 'Quinmonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(5, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(5, 'month');
+                                }
+                            }
+                            break;
+                        case 'Semiannually':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(6, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(6, 'month');
+                                }
+                            }
+                            break;
+                        case 'Annually':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'year');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'year');
+                                }
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+            });
+            //------------------------------
+
+
+            newBudgets.forEach(budget => {
+                delete budget.deleted;
+                delete budget.createdAt;
+                delete budget.updatedAt;
+                if (budget.hasOwnProperty("dayStart")) {
+                    budget.day = budget.dayStart;
+                    delete budget.dayStart;
+
+                }
+            });
+
+
+
+            if (type == '0' || type == '1') {
+
+                const filterTransaction = transactions.filter(transaction => {
+                    return transaction.category.type == type;
+                });
+
+                const filter = newBudgets.filter(budget => {
+                    return budget.category.type == type;
+                });
+
+                // Cùng ngày
+                const merge = [...filter, ...filterTransaction];
+
+
+
+                const aggregatedRecords = {};
+
+                merge.forEach(record => {
+                    const month = moment(record.day).format('MM-YYYY');
+
+                    if (!aggregatedRecords[month]) {
+                        aggregatedRecords[month] = 0
+                    }
+
+                    aggregatedRecords[month] += record.price;
+
+                });
+
+                const sum = Object.values(aggregatedRecords).reduce((acc, curr) => acc + curr, 0);
+                const average = sum / Object.keys(aggregatedRecords).length;
+
+                aggregatedRecords.sum = sum;
+                aggregatedRecords.average = average;
+
+                res.json(aggregatedRecords);
+
+
+            } else if (type == '2') {
+
+                //Chi 
+                const filterTransaction = transactions.filter(transaction => {
+                    return transaction.category.type == '0';
+                });
+
+                const filter = newBudgets.filter(budget => {
+                    return budget.category.type == '0';
+                });
+
+                // Cùng ngày
+                const merge = [...filter, ...filterTransaction];
+
+
+
+                const aggregatedRecords = {};
+
+                merge.forEach(record => {
+                    const month = moment(record.day).format('MM-YYYY');
+
+                    if (!aggregatedRecords[month]) {
+                        aggregatedRecords[month] = 0
+                    }
+
+                    aggregatedRecords[month] += record.price;
+
+                });
+
+                const sum = Object.values(aggregatedRecords).reduce((acc, curr) => acc + curr, 0);
+                const average = sum / Object.keys(aggregatedRecords).length;
+
+                aggregatedRecords.sum = sum;
+                aggregatedRecords.average = average;
+
+                //Thu 
+                const filterTransaction1 = transactions.filter(transaction => {
+                    return transaction.category.type == '1';
+                });
+
+                const filter1 = newBudgets.filter(budget => {
+                    return budget.category.type == '1';
+                });
+
+                // Cùng ngày
+                const merge1 = [...filterTransaction1, ...filter1];
+
+
+
+                const aggregatedRecords1 = {};
+
+                merge1.forEach(record => {
+                    const month = moment(record.day).format('MM-YYYY');
+
+                    if (!aggregatedRecords1[month]) {
+                        aggregatedRecords1[month] = 0
+                    }
+
+                    aggregatedRecords1[month] += record.price;
+
+                });
+
+                const sum1 = Object.values(aggregatedRecords1).reduce((acc, curr) => acc + curr, 0);
+                const average1 = sum / Object.keys(aggregatedRecords1).length;
+
+                aggregatedRecords1.sum = sum1;
+                aggregatedRecords1.average = average1;
+
+
+
+                const difference = {};
+
+                const keys = new Set([...Object.keys(aggregatedRecords), ...Object.keys(aggregatedRecords1)]);
+
+                for (const key of keys) {
+                    const value1 = aggregatedRecords[key] || 0;
+                    const value2 = aggregatedRecords1[key] || 0;
+                    difference[key] = value2 - value1;
+                }
+                res.json(difference);
+
+            }
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    }
+
+
+
+    async getAllReport(req, res) {
+        try {
+            const { type } = req.params;
+            const today = moment().startOf('day');
+
+            const budgets = await Budget.find({
+                userId: req.userId
             });
             const transactions = await Transaction.find({
                 userId: req.userId,
@@ -1135,77 +1556,472 @@ class BudgetController {
                 }
             });
 
-            // Cùng ngày
             const merge = [...newBudgets, ...transactions];
 
+            merge.sort((a, b) => a.day - b.day);
 
-            //  Tìm kiếm 
+            const groupedByDay = {};
 
-            const filteredData = merge.filter(record => {
-                return (
-                    record.category.name.includes(key) || // Lọc bằng tên category
-                    record.note.includes(key) // Lọc bằng nội dung note
-                );
-            });
+            merge.forEach(record => {
+                const day = moment(record.day).format('DD-MM-YYYY');
 
-            const group = new Map();
-
-            filteredData.forEach(obj => {
-                const day = moment(obj.day).format('YYYY-MM-DD');
-                if (!group.has(day)) {
-                    group.set(day, [{ dayExpense: 0, dayRevenue: 0, monthExpense: 0, monthRevenue: 0, total: 0 }]);
-
+                if (groupedByDay.hasOwnProperty(day)) {
+                    groupedByDay[day].push(record);
+                } else {
+                    groupedByDay[day] = [record];
                 }
-                group.get(day).push(obj);
+            });
+
+
+
+            Object.keys(groupedByDay).forEach(day => {
+
+                const totalPriceByType = {};
+
+                groupedByDay[day].forEach(record => {
+                    const categoryType = record.category.type === 0 ? 'expense' : 'revenue';
+
+                    if (totalPriceByType.hasOwnProperty(categoryType)) {
+
+                        totalPriceByType[categoryType] += record.price;
+                    } else {
+
+                        totalPriceByType[categoryType] = record.price;
+                    }
+
+                });
+                groupedByDay[day].push(totalPriceByType);
+            });
+
+            let totalExpense = 0;
+            let totalRevenue = 0;
+
+            Object.keys(groupedByDay).forEach(day => {
+
+                groupedByDay[day].forEach(record => {
+
+                    if (record.revenue) {
+                        totalRevenue += record.revenue;
+                    } else if (record.expense) {
+                        totalExpense += record.expense;
+                    }
+
+                });
 
             });
 
-            const groupDay = Array.from(group.values());
-            // ----------------------------------------------------------------
-
-
-
-
-            // Lấy tổng ngày tổng tháng
-            let dayExpense = 0;
-            let dayRevenue = 0;
-            let monthExpense = 0;
-            let monthRevenue = 0;
-
-            // Ngày
-            groupDay.forEach(arr => {
-                arr.forEach(item => {
-                    if (item.type == 0) {
-                        dayExpense += item.price;
-                    } else if (item.type === 1) {
-                        dayRevenue += item.price;
+            function filterRecords(data) {
+                const filteredData = {};
+                Object.entries(data).forEach(([date, records]) => {
+                    const filteredRecords = records.filter(record => record.category && record.category.type == type);
+                    if (filteredRecords.length > 0) {
+                        filteredData[date] = filteredRecords;
                     }
                 });
-                arr[0].dayExpense = dayExpense;
-                arr[0].dayRevenue = dayRevenue;
+                return filteredData;
+            }
 
-                dayExpense = 0;
-                dayRevenue = 0;
+            const filteredData = filterRecords(groupedByDay);
+            const categoryTotals = {};
+
+            Object.values(filteredData).forEach(record => {
+                record.forEach(item => {
+                    const { category, price } = item;
+
+                    if (category && category._id) {
+
+                        const { _id, name, type, icon, color } = category;
+
+                        if (categoryTotals[_id]) {
+                            categoryTotals[_id].total += price;
+
+                        } else {
+                            categoryTotals[_id] = {
+                                _id,
+                                name,
+                                type,
+                                icon,
+                                color,
+                                total: price,
+                            };
+                        }
+                    }
+                })
+
             });
-            // Tháng
-            groupDay.forEach(arr => {
-                arr.forEach(item => {
-                    monthExpense += item.dayExpense || 0;
-                    monthRevenue += item.dayRevenue || 0;
+
+            const result = {
+                expense: totalExpense,
+                revenue: totalRevenue,
+                total: totalRevenue - totalExpense,
+                category: []
+            };
+
+            Object.values(categoryTotals).forEach(categoryTotal => {
+                categoryTotal.percent = type == '0' ?
+                    (totalExpense !== 0 ? (categoryTotal.total / totalExpense * 100) : 0) :
+                    (totalRevenue !== 0 ? (categoryTotal.total / totalRevenue * 100) : 0);
+            });
+
+
+            Object.values(categoryTotals).forEach(categoryTotal => {
+                result.category.push(categoryTotal);
+            });
+
+            res.json(result);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    }
+
+
+    async searchAll(req, res) {
+        try {
+            const { key } = req.body;
+            const today = moment().startOf('day');
+
+            const budgets = await Budget.find({
+                userId: req.userId
+            });
+            const transactions = await Transaction.find({
+                userId: req.userId,
+            },);
+
+
+            const newBudgets = [];
+            budgets.forEach(budget => {
+
+                const { frequency } = budget;
+
+                if (repeatOptions.includes(frequency)) {
+                    const budgetStart = moment(budget.dayStart);
+
+
+                    switch (frequency) {
+                        case 'Daily':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'day');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'day');
+                                }
+                            }
+                            break;
+                        case 'Weekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'week');
+                                }
+                            }
+                            break;
+                        case 'Biweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'week');
+                                }
+                            }
+                            break;
+                        case 'Triweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'week');
+                                }
+                            }
+                            break;
+                        case 'Quadweekly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'week');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'week');
+                                }
+                            }
+                            break;
+
+                        case 'Monthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'month');
+                                }
+                            }
+                            break;
+                        case 'Bimonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(2, 'month');
+                                }
+                            }
+                            break;
+                        case 'Trimonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(3, 'month');
+                                }
+                            }
+                            break;
+                        case 'Quadmonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(4, 'month');
+                                }
+                            }
+                            break;
+                        case 'Quinmonthly':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(5, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(5, 'month');
+                                }
+                            }
+                            break;
+                        case 'Semiannually':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(6, 'month');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(6, 'month');
+                                }
+                            }
+                            break;
+                        case 'Annually':
+
+                            if (budget.dayEnd == null) {
+                                while (budgetStart.isSameOrBefore(today)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'year');
+                                }
+                            } else {
+                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
+                                    const newBudget = { ...budget.toObject() };
+                                    newBudget.dayStart = budgetStart.valueOf();
+
+                                    newBudgets.push(newBudget);
+                                    budgetStart.add(1, 'year');
+                                }
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+            });
+
+
+            newBudgets.forEach(budget => {
+                delete budget.deleted;
+                delete budget.createdAt;
+                delete budget.updatedAt;
+                if (budget.hasOwnProperty("dayStart")) {
+                    budget.day = budget.dayStart;
+                    delete budget.dayStart;
+
+                }
+            });
+
+            const merge = [...newBudgets, ...transactions];
+
+            const filteredArray = merge.filter(item => {
+                return item.note.includes(key) || item.category.name.includes(key);
+            });
+
+            filteredArray.sort((a, b) => a.day - b.day);
+
+            const groupedByDay = {};
+
+            filteredArray.forEach(record => {
+                const day = moment(record.day).format('DD-MM-YYYY');
+
+                if (groupedByDay.hasOwnProperty(day)) {
+                    groupedByDay[day].push(record);
+                } else {
+                    groupedByDay[day] = [record];
+                }
+            });
+
+
+
+            Object.keys(groupedByDay).forEach(day => {
+
+                const totalPriceByType = {};
+
+                groupedByDay[day].forEach(record => {
+                    const categoryType = record.category.type === 0 ? 'expense' : 'revenue';
+
+                    if (totalPriceByType.hasOwnProperty(categoryType)) {
+
+                        totalPriceByType[categoryType] += record.price;
+                    } else {
+
+                        totalPriceByType[categoryType] = record.price;
+                    }
+
                 });
+                groupedByDay[day].push(totalPriceByType);
             });
-            // Số Dư tháng
-            groupDay.forEach(arr => {
-                arr[0].monthExpense = monthExpense
-                arr[0].monthRevenue = monthRevenue
-                arr[0].total = monthRevenue - monthExpense
-            })
 
+            let totalExpense = 0;
+            let totalRevenue = 0;
 
-           
+            Object.keys(groupedByDay).forEach(day => {
 
+                groupedByDay[day].forEach(record => {
 
-            res.json(groupDay);
+                    if (record.revenue) {
+                        totalRevenue += record.revenue;
+                    } else if (record.expense) {
+                        totalExpense += record.expense;
+                    }
+
+                });
+
+            });
+            groupedByDay.totalRevenue = totalRevenue;
+            groupedByDay.totalExpense = totalExpense;
+            groupedByDay.total = totalRevenue - totalExpense;
+
+            res.json(groupedByDay);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Internal Server Error' });
