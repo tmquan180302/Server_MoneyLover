@@ -28,7 +28,7 @@ router.get('/:startDay/:endDay/:type/year', authenToken, budgetController.getYea
 router.get('/:startDay/:endDay/:type', authenToken, budgetController.getReport);
 
 //Lấy dữ liệu màn Calendar
-router.get('/:startDay/:endDay', budgetController.getCalendar);
+router.get('/:startDay/:endDay',authenToken, budgetController.getCalendar);
 
 //Tìm kiếm
 
