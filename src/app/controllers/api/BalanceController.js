@@ -1,5 +1,4 @@
-const { response } = require('express');
-const Balance = require('../models/Balance');
+const Balance = require('../../models/Balance');
 
 
 class BalanceController {

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const categoryController = require('../app/controllers/CategoryController');
-const { authenToken } = require('../middlewares/auth');
+const categoryController = require('../../app/controllers/api/CategoryController');
+const { authenToken } = require('../../middlewares/auth');
 
 
 router.get('/', authenToken, categoryController.showAll);

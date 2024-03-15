@@ -1,16 +1,21 @@
-const userRouter = require('./user');
-const transactionRouter = require('./transaction');
-const categoryRouter = require('./category');
-const budgetRouter = require('./budget');
-const balanceRouter = require('./balance');
+const userRouter = require('./api/user');
+const transactionRouter = require('./api/transaction');
+const categoryRouter = require('./api/category');
+const budgetRouter = require('./api/budget');
+const balanceRouter = require('./api/balance');
 
 
 function route(app) {
-    app.use('/user', userRouter);
-    app.use('/transaction', transactionRouter);
-    app.use('/category', categoryRouter);
-    app.use('/budget', budgetRouter);
-    app.use('/balance', balanceRouter);
+    app.use('/api/user', userRouter);
+    app.use('/api/transaction', transactionRouter);
+    app.use('/api/category', categoryRouter);
+    app.use('/api/budget', budgetRouter);
+    app.use('/api/balance', balanceRouter);
+
+    
+    
+
+
 
 }
 

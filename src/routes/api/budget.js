@@ -1,21 +1,24 @@
 const express = require('express');
 const router = express.Router();
 
-const budgetController = require('../app/controllers/BudgetController');
-const { authenToken } = require('../middlewares/auth');
+const budgetController = require('../../app/controllers/api/BudgetController');
+const { authenToken } = require('../../middlewares/auth');
+
+
+
 
 
 // Báo cáo toàn kì
 router.get('/allTimeReport', authenToken, budgetController.getAllTimeReport);
 
 // Lấy dữ liệu các bản ghi theo danh mục (Phần onlick của của báo cáo)
-router.get('/:id/report', authenToken, budgetController.getCateroryReport);
+router.get('/:id/report', budgetController.getCateroryReport);
 
 // Gửi lên req là key
-router.post('/find', authenToken, budgetController.searchAll);
+router.post('/find', budgetController.searchAll);
 
 // Báo cáo danh mục toàn kỳ
-router.get('/:type', authenToken, budgetController.getAllReport);
+router.get('/:type', budgetController.getAllReport);
 
 // Lấy dữ liệu báo cáo trong năm 
 // Chi tiêu params type = 0 
@@ -23,7 +26,7 @@ router.get('/:type', authenToken, budgetController.getAllReport);
 // Tổng params type = 2
 router.get('/:startDay/:endDay/:type/year', authenToken, budgetController.getYearReport);
 
-//Lấy dữ liệu màn báo và màn báo cáo danh mục trong năm 
+//Lấy dữ liệu fragment báo và màn báo cáo danh mục trong năm 
 // Lấy theo năm thì lấy 1/1/2024 (dạng miliseacond) đến 31/12/2024 (dạng miliseacond)
 router.get('/:startDay/:endDay/:type', authenToken, budgetController.getReport);
 

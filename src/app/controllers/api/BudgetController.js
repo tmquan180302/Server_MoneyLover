@@ -1,8 +1,8 @@
-const { repeatOptions } = require('../../util/options');
-const Budget = require('../models/Budget');
+const { repeatOptions } = require('../../../util/options');
+const Budget = require('../../models/Budget');
 const moment = require('moment-timezone');
-const Transaction = require('../models/Transaction');
-const Balance = require('../models/Balance');
+const Transaction = require('../../models/Transaction');
+const Balance = require('../../models/Balance');
 
 
 class BudgetController {
@@ -96,7 +96,7 @@ class BudgetController {
         }
     }
 
-    // [GET] 
+    // đã sửa
     async getCalendar(req, res) {
         try {
             const { startDay, endDay } = req.params;
@@ -370,14 +370,12 @@ class BudgetController {
 
             });
 
-            const filteredRecords = newBudgets.filter(budget => {
-                return budget.dayStart >= startDay && budget.dayStart <= endDay;
-            });
-
-            filteredRecords.forEach(budget => {
+            newBudgets.forEach(budget => {
                 delete budget.deleted;
                 delete budget.createdAt;
                 delete budget.updatedAt;
+                delete budget.frequency;
+                delete budget.dayEnd;
                 if (budget.hasOwnProperty("dayStart")) {
                     budget.day = budget.dayStart;
                     delete budget.dayStart;
@@ -385,13 +383,40 @@ class BudgetController {
                 }
             });
 
-            const merge = [...filteredRecords, ...transactions];
+            const merge = [...newBudgets, ...transactions];
 
-            merge.sort((a, b) => a.day - b.day);
+            const filteredArray = merge.filter(item => {
+                return item.day >= startDay && item.day <= endDay;
+            });
+
+            filteredArray.sort((a, b) => a.day - b.day);
+
+
+            function calculateTotalPriceByCategoryType(data) {
+                const totalPriceByCategoryType = {};
+
+                data.forEach(entry => {
+                    const { category, price } = entry;
+                    const { type } = category;
+
+                    if (!totalPriceByCategoryType[type]) {
+                        totalPriceByCategoryType[type] = 0;
+                    }
+
+                    totalPriceByCategoryType[type] += price;
+                });
+
+                return totalPriceByCategoryType;
+            }
+
+
+
+            const caculateType = calculateTotalPriceByCategoryType(filteredArray);
+
 
             const groupedByDay = {};
 
-            merge.forEach(record => {
+            filteredArray.forEach(record => {
                 const day = moment(record.day).format('DD-MM-YYYY');
 
                 if (groupedByDay.hasOwnProperty(day)) {
@@ -402,47 +427,46 @@ class BudgetController {
             });
 
 
+            const totalPriceByTypeAndDay = {};
 
             Object.keys(groupedByDay).forEach(day => {
-
                 const totalPriceByType = {};
 
                 groupedByDay[day].forEach(record => {
-                    const categoryType = record.category.type === 0 ? 'expense' : 'revenue';
-
-                    if (totalPriceByType.hasOwnProperty(categoryType)) {
-
-                        totalPriceByType[categoryType] += record.price;
-                    } else {
-
-                        totalPriceByType[categoryType] = record.price;
+                    const categoryType = record.category.type;
+                    if (!totalPriceByType[categoryType]) {
+                        totalPriceByType[categoryType] = 0;
                     }
-
-                });
-                groupedByDay[day].push(totalPriceByType);
-            });
-
-            let totalExpense = 0;
-            let totalRevenue = 0;
-
-            Object.keys(groupedByDay).forEach(day => {
-
-                groupedByDay[day].forEach(record => {
-
-                    if (record.revenue) {
-                        totalRevenue += record.revenue;
-                    } else if (record.expense) {
-                        totalExpense += record.expense;
-                    }
-
+                    totalPriceByType[categoryType] += record.price;
                 });
 
+                totalPriceByTypeAndDay[day] = totalPriceByType;
             });
-            groupedByDay.totalRevenue = totalRevenue;
-            groupedByDay.totalExpense = totalExpense;
-            groupedByDay.total = totalRevenue - totalExpense;
 
-            res.json(groupedByDay);
+            const transformedData = Object.keys(totalPriceByTypeAndDay).map(date => {
+
+                const dayData = totalPriceByTypeAndDay[date];
+                const expense = dayData['0'] || 0;
+                const revenue = dayData['1'] || 0;
+                const [day, month, year] = date.split('-').map(Number);
+                return {
+                    expense: expense,
+                    revenue: revenue,
+                    day: day,
+                    month: month,
+                    year: year
+                };
+            });
+
+            const result = {
+                calendar : transformedData,
+                expense: caculateType["0"] !== undefined ? caculateType["0"] : 0,
+                revenue: caculateType["1"] !== undefined ? caculateType["1"] : 0,
+                total: (caculateType["1"] !== undefined ? caculateType["1"] : 0) - (caculateType["0"] !== undefined ? caculateType["0"] : 0),
+                transactions: filteredArray
+            };
+
+            res.json(result);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Internal Server Error' });
@@ -450,7 +474,7 @@ class BudgetController {
     }
 
 
-
+    // đã sửa
     async getReport(req, res) {
         try {
             const { startDay, endDay, type } = req.params;
@@ -724,14 +748,13 @@ class BudgetController {
 
             });
 
-            const filteredRecords = newBudgets.filter(budget => {
-                return budget.dayStart >= startDay && budget.dayStart <= endDay;
-            });
 
-            filteredRecords.forEach(budget => {
+            newBudgets.forEach(budget => {
                 delete budget.deleted;
                 delete budget.createdAt;
                 delete budget.updatedAt;
+                delete budget.frequency;
+                delete budget.dayEnd;
                 if (budget.hasOwnProperty("dayStart")) {
                     budget.day = budget.dayStart;
                     delete budget.dayStart;
@@ -739,110 +762,99 @@ class BudgetController {
                 }
             });
 
-            const merge = [...filteredRecords, ...transactions];
+            const filterDay = newBudgets.filter(item => {
+                return item.day >= startDay && item.day <= endDay;
+            })
 
-            merge.sort((a, b) => a.day - b.day);
+            const merge = [...filterDay, ...transactions];
 
-            const groupedByDay = {};
+            // Lấy tổng thu chi tháng
+            const expenseTransaction = merge.filter(item => {
+                return item.category.type == '0';
+            });
+            const revenueTransaction = merge.filter(item => {
+                return item.category.type == '1';
+            });
 
-            merge.forEach(record => {
-                const day = moment(record.day).format('DD-MM-YYYY');
+            let expense = 0;
+            let revenue = 0;
 
-                if (groupedByDay.hasOwnProperty(day)) {
-                    groupedByDay[day].push(record);
-                } else {
-                    groupedByDay[day] = [record];
+            expenseTransaction.forEach(item => {
+
+                if (item.price) {
+                    expense += item.price;
+                } else if (item.price) {
+                    expense += item.price;
+                }
+
+            });
+
+            revenueTransaction.forEach(item => {
+
+                if (item.price) {
+                    revenue += item.price;
+                } else if (item.price) {
+                    revenue += item.price;
+                }
+
+            });
+            ////----------------------------------------------------------------
+
+            // Lọc theoo danh mục truyền qua params
+            const filter = merge.filter(item => {
+                return item.category.type == type;
+            });
+
+            let total = 0;
+
+            filter.forEach(item => {
+
+                if (item.price) {
+                    total += item.price;
+                } else if (item.price) {
+                    total += item.price;
+                }
+
+            });
+
+
+            const categoryTotals = {};
+
+            filter.forEach(item => {
+                const { category, price } = item;
+
+                if (category && category._id) {
+
+                    const { _id, name, type, icon, color } = category;
+
+                    if (categoryTotals[_id]) {
+                        categoryTotals[_id].total += price;
+
+                    } else {
+                        categoryTotals[_id] = {
+                            _id,
+                            name,
+                            type,
+                            icon,
+                            color,
+                            total: price,
+                        };
+                    }
                 }
             });
 
-
-
-            Object.keys(groupedByDay).forEach(day => {
-
-                const totalPriceByType = {};
-
-                groupedByDay[day].forEach(record => {
-                    const categoryType = record.category.type === 0 ? 'expense' : 'revenue';
-
-                    if (totalPriceByType.hasOwnProperty(categoryType)) {
-
-                        totalPriceByType[categoryType] += record.price;
-                    } else {
-
-                        totalPriceByType[categoryType] = record.price;
-                    }
-
-                });
-                groupedByDay[day].push(totalPriceByType);
+            Object.values(categoryTotals).forEach(categoryTotal => {
+                categoryTotal.percent = categoryTotal.total / total * 100
             });
 
-            let totalExpense = 0;
-            let totalRevenue = 0;
-
-            Object.keys(groupedByDay).forEach(day => {
-
-                groupedByDay[day].forEach(record => {
-
-                    if (record.revenue) {
-                        totalRevenue += record.revenue;
-                    } else if (record.expense) {
-                        totalExpense += record.expense;
-                    }
-
-                });
-
-            });
-
-            function filterRecords(data) {
-                const filteredData = {};
-                Object.entries(data).forEach(([date, records]) => {
-                    const filteredRecords = records.filter(record => record.category && record.category.type == type);
-                    if (filteredRecords.length > 0) {
-                        filteredData[date] = filteredRecords;
-                    }
-                });
-                return filteredData;
-            }
-
-            const filteredData = filterRecords(groupedByDay);
-            const categoryTotals = {};
-
-            Object.values(filteredData).forEach(record => {
-                record.forEach(item => {
-                    const { category, price } = item;
-
-                    if (category && category._id) {
-
-                        const { _id, name, type, icon, color } = category;
-
-                        if (categoryTotals[_id]) {
-                            categoryTotals[_id].total += price;
-
-                        } else {
-                            categoryTotals[_id] = {
-                                _id,
-                                name,
-                                type,
-                                icon,
-                                color,
-                                total: price,
-                            };
-                        }
-                    }
-                })
-
-            });
+            const convertedArray = Object.values(categoryTotals);
 
             const result = {
-                expense: totalRevenue,
-                revenue: totalExpense,
-                total: totalRevenue - totalExpense,
-                category: []
-            };
-
-            Object.values(categoryTotals).forEach(categoryTotal => {
-                result.category.push(categoryTotal);
-            });
+                expense: expense,
+                revenue: revenue,
+                total: revenue - expense,
+                category: convertedArray
+            }
 
             res.json(result);
         } catch (error) {
@@ -851,8 +863,7 @@ class BudgetController {
         }
     }
 
-
-
+    // đã sửa
     async getYearReport(req, res) {
         try {
             const { startDay, endDay, type } = req.params;
@@ -1174,10 +1185,25 @@ class BudgetController {
                 const sum = Object.values(aggregatedRecords).reduce((acc, curr) => acc + curr, 0);
                 const average = sum / Object.keys(aggregatedRecords).length;
 
-                aggregatedRecords.sum = sum;
-                aggregatedRecords.average = average;
 
-                res.json(aggregatedRecords);
+
+                const chart = [];
+                for (const key in aggregatedRecords) {
+                    const [month, year] = key.split('-');
+                    const total = aggregatedRecords[key];
+
+                    chart.push({
+                        month: month ? parseInt(month) : "",
+                        total: total ? total : "",
+                        year: year ? parseInt(year) : ""
+                    });
+                }
+                const result = {
+                    sum: sum,
+                    average: average,
+                    chart: chart,
+                }
+                res.json(result);
 
 
             } else if (type == '2') {
@@ -1193,8 +1219,6 @@ class BudgetController {
 
                 // Cùng ngày
                 const merge = [...filter, ...filterTransaction];
-
-
 
                 const aggregatedRecords = {};
 
@@ -1212,8 +1236,7 @@ class BudgetController {
                 const sum = Object.values(aggregatedRecords).reduce((acc, curr) => acc + curr, 0);
                 const average = sum / Object.keys(aggregatedRecords).length;
 
-                aggregatedRecords.sum = sum;
-                aggregatedRecords.average = average;
+                //----------------------------------------------------------------
 
                 //Thu 
                 const filterTransaction1 = transactions.filter(transaction => {
@@ -1226,8 +1249,6 @@ class BudgetController {
 
                 // Cùng ngày
                 const merge1 = [...filterTransaction1, ...filter1];
-
-
 
                 const aggregatedRecords1 = {};
 
@@ -1245,9 +1266,6 @@ class BudgetController {
                 const sum1 = Object.values(aggregatedRecords1).reduce((acc, curr) => acc + curr, 0);
                 const average1 = sum / Object.keys(aggregatedRecords1).length;
 
-                aggregatedRecords1.sum = sum1;
-                aggregatedRecords1.average = average1;
-
 
 
                 const difference = {};
@@ -1259,7 +1277,24 @@ class BudgetController {
                     const value2 = aggregatedRecords1[key] || 0;
                     difference[key] = value2 - value1;
                 }
-                res.json(difference);
+
+                const chart = [];
+                for (const key in difference) {
+                    const [month, year] = key.split('-');
+                    const total = difference[key];
+
+                    chart.push({
+                        month: month ? parseInt(month) : "",
+                        total: total ? total : "",
+                        year: year ? parseInt(year) : ""
+                    });
+                }
+                const result = {
+                    sum: sum1 - sum,
+                    average: average1 - average,
+                    chart: chart,
+                }
+                res.json(result);
 
             }
 
@@ -1270,7 +1305,7 @@ class BudgetController {
     }
 
 
-
+    // đã sửa
     async getAllReport(req, res) {
         try {
             const { type } = req.params;
@@ -1548,6 +1583,8 @@ class BudgetController {
                 delete budget.deleted;
                 delete budget.createdAt;
                 delete budget.updatedAt;
+                delete budget.frequency;
+                delete budget.dayEnd;
                 if (budget.hasOwnProperty("dayStart")) {
                     budget.day = budget.dayStart;
                     delete budget.dayStart;
@@ -1557,124 +1594,63 @@ class BudgetController {
 
             const merge = [...newBudgets, ...transactions];
 
-            merge.sort((a, b) => a.day - b.day);
+            const filter = merge.filter(item => {
+                return item.category.type == type;
+            });
 
-            const groupedByDay = {};
+            let total = 0;
 
-            merge.forEach(record => {
-                const day = moment(record.day).format('DD-MM-YYYY');
+            filter.forEach(item => {
 
-                if (groupedByDay.hasOwnProperty(day)) {
-                    groupedByDay[day].push(record);
-                } else {
-                    groupedByDay[day] = [record];
+                if (item.price) {
+                    total += item.price;
+                } else if (item.price) {
+                    total += item.price;
+                }
+
+            });
+
+
+            const categoryTotals = {};
+
+            filter.forEach(item => {
+                const { category, price } = item;
+
+                if (category && category._id) {
+
+                    const { _id, name, type, icon, color } = category;
+
+                    if (categoryTotals[_id]) {
+                        categoryTotals[_id].total += price;
+
+                    } else {
+                        categoryTotals[_id] = {
+                            _id,
+                            name,
+                            type,
+                            icon,
+                            color,
+                            total: price,
+                        };
+                    }
                 }
             });
 
-
-
-            Object.keys(groupedByDay).forEach(day => {
-
-                const totalPriceByType = {};
-
-                groupedByDay[day].forEach(record => {
-                    const categoryType = record.category.type === 0 ? 'expense' : 'revenue';
-
-                    if (totalPriceByType.hasOwnProperty(categoryType)) {
-
-                        totalPriceByType[categoryType] += record.price;
-                    } else {
-
-                        totalPriceByType[categoryType] = record.price;
-                    }
-
-                });
-                groupedByDay[day].push(totalPriceByType);
-            });
-
-            let totalExpense = 0;
-            let totalRevenue = 0;
-
-            Object.keys(groupedByDay).forEach(day => {
-
-                groupedByDay[day].forEach(record => {
-
-                    if (record.revenue) {
-                        totalRevenue += record.revenue;
-                    } else if (record.expense) {
-                        totalExpense += record.expense;
-                    }
-
-                });
-
-            });
-
-            function filterRecords(data) {
-                const filteredData = {};
-                Object.entries(data).forEach(([date, records]) => {
-                    const filteredRecords = records.filter(record => record.category && record.category.type == type);
-                    if (filteredRecords.length > 0) {
-                        filteredData[date] = filteredRecords;
-                    }
-                });
-                return filteredData;
-            }
-
-            const filteredData = filterRecords(groupedByDay);
-            const categoryTotals = {};
-
-            Object.values(filteredData).forEach(record => {
-                record.forEach(item => {
-                    const { category, price } = item;
-
-                    if (category && category._id) {
-
-                        const { _id, name, type, icon, color } = category;
-
-                        if (categoryTotals[_id]) {
-                            categoryTotals[_id].total += price;
-
-                        } else {
-                            categoryTotals[_id] = {
-                                _id,
-                                name,
-                                type,
-                                icon,
-                                color,
-                                total: price,
-                            };
-                        }
-                    }
-                })
-
-            });
-
-            const result = {
-                expense: totalExpense,
-                revenue: totalRevenue,
-                total: totalRevenue - totalExpense,
-                category: []
-            };
-
             Object.values(categoryTotals).forEach(categoryTotal => {
-                categoryTotal.percent = type == '0' ?
-                    (totalExpense !== 0 ? (categoryTotal.total / totalExpense * 100) : 0) :
-                    (totalRevenue !== 0 ? (categoryTotal.total / totalRevenue * 100) : 0);
+                categoryTotal.percent = categoryTotal.total / total * 100
             });
 
+            const convertedArray = Object.values(categoryTotals);
 
-            Object.values(categoryTotals).forEach(categoryTotal => {
-                result.category.push(categoryTotal);
-            });
 
-            res.json(result);
+            res.json(convertedArray);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Internal Server Error' });
         }
     }
 
-
+    // đã sửa 
     async searchAll(req, res) {
         try {
             const { key } = req.body;
@@ -1952,6 +1928,8 @@ class BudgetController {
                 delete budget.deleted;
                 delete budget.createdAt;
                 delete budget.updatedAt;
+                delete budget.frequency;
+                delete budget.dayEnd;
                 if (budget.hasOwnProperty("dayStart")) {
                     budget.day = budget.dayStart;
                     delete budget.dayStart;
@@ -1967,67 +1945,42 @@ class BudgetController {
 
             filteredArray.sort((a, b) => a.day - b.day);
 
-            const groupedByDay = {};
 
-            filteredArray.forEach(record => {
-                const day = moment(record.day).format('DD-MM-YYYY');
+            function calculateTotalPriceByCategoryType(data) {
+                const totalPriceByCategoryType = {};
 
-                if (groupedByDay.hasOwnProperty(day)) {
-                    groupedByDay[day].push(record);
-                } else {
-                    groupedByDay[day] = [record];
-                }
-            });
+                data.forEach(entry => {
+                    const { category, price } = entry;
+                    const { type } = category;
 
-
-
-            Object.keys(groupedByDay).forEach(day => {
-
-                const totalPriceByType = {};
-
-                groupedByDay[day].forEach(record => {
-                    const categoryType = record.category.type === 0 ? 'expense' : 'revenue';
-
-                    if (totalPriceByType.hasOwnProperty(categoryType)) {
-
-                        totalPriceByType[categoryType] += record.price;
-                    } else {
-
-                        totalPriceByType[categoryType] = record.price;
+                    if (!totalPriceByCategoryType[type]) {
+                        totalPriceByCategoryType[type] = 0;
                     }
 
-                });
-                groupedByDay[day].push(totalPriceByType);
-            });
-
-            let totalExpense = 0;
-            let totalRevenue = 0;
-
-            Object.keys(groupedByDay).forEach(day => {
-
-                groupedByDay[day].forEach(record => {
-
-                    if (record.revenue) {
-                        totalRevenue += record.revenue;
-                    } else if (record.expense) {
-                        totalExpense += record.expense;
-                    }
-
+                    totalPriceByCategoryType[type] += price;
                 });
 
-            });
-            groupedByDay.totalRevenue = totalRevenue;
-            groupedByDay.totalExpense = totalExpense;
-            groupedByDay.total = totalRevenue - totalExpense;
+                return totalPriceByCategoryType;
+            }
 
-            res.json(groupedByDay);
+            const caculateType = calculateTotalPriceByCategoryType(filteredArray);
+
+
+            const result = {
+                "expense": caculateType["0"] !== undefined ? caculateType["0"] : 0,
+                "revenue": caculateType["1"] !== undefined ? caculateType["1"] : 0,
+                "total": (caculateType["1"] !== undefined ? caculateType["1"] : 0) - (caculateType["0"] !== undefined ? caculateType["0"] : 0),
+                "transactions": filteredArray
+            };
+
+            res.json(result);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Internal Server Error' });
         }
     }
 
-
+    // đã sửa 
     async getCateroryReport(req, res) {
         try {
             const { id } = req.params;
@@ -2307,6 +2260,8 @@ class BudgetController {
                 delete budget.deleted;
                 delete budget.createdAt;
                 delete budget.updatedAt;
+                delete budget.frequency;
+                delete budget.dayEnd;
                 if (budget.hasOwnProperty("dayStart")) {
                     budget.day = budget.dayStart;
                     delete budget.dayStart;
@@ -2325,17 +2280,6 @@ class BudgetController {
 
             merge.sort((a, b) => a.day - b.day);
 
-            const groupedByDay = {};
-            // Gộp ngày
-            merge.forEach(record => {
-                const day = moment(record.day).format('DD-MM-YYYY');
-
-                if (groupedByDay.hasOwnProperty(day)) {
-                    groupedByDay[day].push(record);
-                } else {
-                    groupedByDay[day] = [record];
-                }
-            });
 
 
             const groupedByMonth = {};
@@ -2351,37 +2295,45 @@ class BudgetController {
             });
 
 
-            function calculateTotal(expenses) {
-                let total = 0;
-                for (const expense of expenses) {
-                    total += expense.price;
-                }
-                return total;
+            function calculateTotalPrice(items) {
+                return items.reduce((total, item) => total + item.price, 0);
             }
 
+            // tổng giá theo tháng
             function calculateMonthlyTotal(data) {
                 const monthlyTotal = {};
+
                 for (const month in data) {
-                    const expenses = data[month];
-                    monthlyTotal[month] = calculateTotal(expenses);
+                    const items = data[month];
+                    const totalPrice = calculateTotalPrice(items);
+                    monthlyTotal[month] = totalPrice;
                 }
+
                 return monthlyTotal;
             }
 
-            const monthlyTotal = calculateMonthlyTotal(groupedByMonth);
-            console.log("Tổng giá trị theo tháng:");
-            console.log(monthlyTotal);
+            const result = calculateMonthlyTotal(groupedByMonth);
 
+            const chart = [];
+            for (const key in result) {
+                const [month, year] = key.split('-');
+                const total = result[key];
 
-            res.json({ month: monthlyTotal, day: groupedByDay });
+                chart.push({
+                    month: month ? parseInt(month) : "",
+                    total: total ? total : "",
+                    year: year ? parseInt(year) : ""
+                });
+            }
+
+            res.json({ chart, transactions: merge });
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Internal Server Error' });
         }
     }
 
-
-
+    //đã sửa
     async getAllTimeReport(req, res) {
         try {
 
