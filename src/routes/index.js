@@ -6,11 +6,11 @@ const balanceRouter = require('./api/balance');
 
 
 function route(app) {
-    app.use('/api/user', userRouter);
-    app.use('/api/transaction', transactionRouter);
-    app.use('/api/category', categoryRouter);
-    app.use('/api/budget', budgetRouter);
-    app.use('/api/balance', balanceRouter);
+    app.use('/user', userRouter);
+    app.use('/transaction', transactionRouter);
+    app.use('/category', categoryRouter);
+    app.use('/budget', budgetRouter);
+    app.use('/balance', balanceRouter);
 
     
     
