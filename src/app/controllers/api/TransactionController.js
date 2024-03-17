@@ -67,8 +67,8 @@ class TransactionController {
         }
 
         try {
-            const newTransaction = await Transaction.updateOne(id, data, { new: true });
-            res.status(201).json(newTransaction);
+            await Transaction.updateOne(id, data, { new: true });
+            res.status(200).json('Cập nhật thành công');
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
@@ -92,7 +92,7 @@ class TransactionController {
 
 
     //[GET] transaction/calendarScreen
-    
+
 
 
 

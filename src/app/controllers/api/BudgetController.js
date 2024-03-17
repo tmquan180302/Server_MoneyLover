@@ -74,8 +74,8 @@ class BudgetController {
         }
 
         try {
-            const newbudget = await Budget.findOneAndUpdate(id, data, { new: true });
-            res.json(newbudget);
+            await Budget.findOneAndUpdate(id, data, { new: true });
+            res.status(200).json('Sửa thành công');
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
@@ -459,7 +459,7 @@ class BudgetController {
             });
 
             const result = {
-                calendar : transformedData,
+                calendar: transformedData,
                 expense: caculateType["0"] !== undefined ? caculateType["0"] : 0,
                 revenue: caculateType["1"] !== undefined ? caculateType["1"] : 0,
                 total: (caculateType["1"] !== undefined ? caculateType["1"] : 0) - (caculateType["0"] !== undefined ? caculateType["0"] : 0),

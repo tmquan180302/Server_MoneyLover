@@ -7,7 +7,7 @@ const { authenToken } = require('../../middlewares/auth');
 router.get('/',authenToken, transactionController.showAll);
 router.get('/:id',authenToken, transactionController.show);
 router.post('/create', authenToken, transactionController.create);
-router.post('/update',authenToken, transactionController.update);
+router.post('/:id/update',authenToken, transactionController.update);
 router.delete('/delete',authenToken, transactionController.destroy);
 
 // Get Screens

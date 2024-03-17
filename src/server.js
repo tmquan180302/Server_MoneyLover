@@ -2,15 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
+const ejsLayout = require('express-ejs-layouts')
 const methodOverride = require('method-override');
 const path = require('path');
 const route = require('./routes');
 const db = require('./config/db');
-
 db.connect();
 
 const app = express();
-const PORT = 3000;
+const PORT = 8080;
+
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -21,9 +22,14 @@ app.use(methodOverride('_method'));
 
 app.use(morgan('tiny'));
 
-app.set('views', '/src/views');
+app.use(ejsLayout)
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-app.set('layout', '/src/views/layouts');
+app.set('layout', './layouts/main');
+
+app.get('/', (req, res) => {
+    res.render('dashboard/dashboard');
+});
 
 
 route(app);
