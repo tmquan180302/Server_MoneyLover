@@ -36,7 +36,7 @@ router.get('/:startDay/:endDay',authenToken, budgetController.getCalendar);
 //Tìm kiếm
 
 router.delete('/:id', authenToken, budgetController.destroy);
-router.post(':id/update', authenToken, budgetController.update);
+router.post('/:id/update', authenToken, budgetController.update);
 router.post('/create', authenToken, budgetController.create);
 router.get('/:id', authenToken, budgetController.show);
 router.get('/', authenToken, budgetController.showAll);

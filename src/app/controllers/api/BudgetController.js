@@ -74,7 +74,7 @@ class BudgetController {
         }
 
         try {
-            await Budget.findOneAndUpdate({_id : id}, data, { new: true });
+            await Budget.findOneAndUpdate({ _id: id }, data, { new: true });
             res.status(200).json('Sửa thành công');
         } catch (error) {
             res.status(400).json({ message: error.message });
@@ -87,8 +87,8 @@ class BudgetController {
 
         try {
             const id = req.params.id;
-            const deletedBudget = await Budget.delete({ _id: id }, { new: true });
-            res.json(deletedBudget);
+            await Budget.delete({ _id: id }, { new: true });
+            res.status(200).json('Xóa thành công');
 
         } catch (err) {
             console.error('Error delete transaction:', err);

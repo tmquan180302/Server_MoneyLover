@@ -80,9 +80,9 @@ class TransactionController {
     async destroy(req, res, next) {
 
         try {
-            const { id } = req.params;
-            const deletedTransaction = await Transaction.delete({ _id: id }, { new: true });
-            res.json(deletedTransaction);
+            const id = req.params.id;
+            await Transaction.delete({ _id: id }, { new: true });
+            res.status(200).json('Xóa thành công');
 
         } catch (err) {
             console.error('Error delete transaction:', err);
