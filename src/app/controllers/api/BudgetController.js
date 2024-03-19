@@ -1983,7 +1983,7 @@ class BudgetController {
     // đã sửa 
     async getCateroryReport(req, res) {
         try {
-            const { id } = req.params;
+            const { startDay, endDay, id } = req.params;
             const today = moment().startOf('day');
 
             const budgets = await Budget.find({
@@ -2280,6 +2280,10 @@ class BudgetController {
 
             merge.sort((a, b) => a.day - b.day);
 
+            const filterMerge = merge.filter(transaction => {
+                return transaction.day >= startDay && transaction.day <= endDay;
+            });
+
 
 
             const groupedByMonth = {};
@@ -2326,7 +2330,7 @@ class BudgetController {
                 });
             }
 
-            res.json({ chart, transactions: merge });
+            res.json({ chart, transactions: filterMerge });
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Internal Server Error' });

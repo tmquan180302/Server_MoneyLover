@@ -12,13 +12,13 @@ const { authenToken } = require('../../middlewares/auth');
 router.get('/allTimeReport', authenToken, budgetController.getAllTimeReport);
 
 // Lấy dữ liệu các bản ghi theo danh mục (Phần onlick của của báo cáo)
-router.get('/:id/report',authenToken, budgetController.getCateroryReport);
+router.get('/:startDay/:endDay/:id/report', budgetController.getCateroryReport);
 
 // Gửi lên req là key
-router.post('/find',authenToken, budgetController.searchAll);
+router.post('/find', authenToken, budgetController.searchAll);
 
 // Báo cáo danh mục toàn kỳ
-router.get('/:type',authenToken, budgetController.getAllReport);
+router.get('/:type', authenToken, budgetController.getAllReport);
 
 // Lấy dữ liệu báo cáo trong năm 
 // Chi tiêu params type = 0 
@@ -31,7 +31,7 @@ router.get('/:startDay/:endDay/:type/year', authenToken, budgetController.getYea
 router.get('/:startDay/:endDay/:type', authenToken, budgetController.getReport);
 
 //Lấy dữ liệu màn Calendar
-router.get('/:startDay/:endDay',authenToken, budgetController.getCalendar);
+router.get('/:startDay/:endDay', authenToken, budgetController.getCalendar);
 
 //Tìm kiếm
 
