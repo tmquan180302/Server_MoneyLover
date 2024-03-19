@@ -12,7 +12,7 @@ const { authenToken } = require('../../middlewares/auth');
 router.get('/allTimeReport', authenToken, budgetController.getAllTimeReport);
 
 // Lấy dữ liệu các bản ghi theo danh mục (Phần onlick của của báo cáo)
-router.get('/:startDay/:endDay/:id/report', budgetController.getCateroryReport);
+router.get('/:startDay/:endDay/:id/report', authenToken, budgetController.getCateroryReport);
 
 // Gửi lên req là key
 router.post('/find', authenToken, budgetController.searchAll);
