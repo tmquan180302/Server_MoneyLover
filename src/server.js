@@ -9,8 +9,8 @@ const route = require('./routes');
 const db = require('./config/db');
 db.connect();
 
-const app = express();  
-const PORT = 8080;
+const app = express();
+const PORT = 3000;
 
 
 app.use(cors());
