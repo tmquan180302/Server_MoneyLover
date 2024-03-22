@@ -1,26 +1,38 @@
-<div
-class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
->
-<h1 class="h2">Thống kê</h1>
+<div class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 class="h2">Thống kê</h1>
 
-<form action="/bill/dashboard" method="POST">
-  <div class="row form-group mb-4" >
-    <div class="col">
-    <label for="tel">Ngày bắt đầu</label>
-      <input class="form-control" type="date" name="start_at" required />
+  <form action="/bill/dashboard" method="POST">
+    <div class="row form-group mb-4">
+      <div class="col">
+        <label for="tel">Ngày bắt đầu</label>
+        <input class="form-control" type="date" name="start_at" required />
+      </div>
+      <div class="col">
+        <label for="tel">Ngày kết thúc</label>
+        <input class="form-control" type="date" name="expries_at" required />
+      </div>
+      <div class="col">
+        <button style="margin-top: 20px;" type="submit" class="btn btn-primary">Xác nhận</button>
+      </div>
     </div>
-    <div class="col">
-    <label for="tel">Ngày kết thúc</label>
-      <input class="form-control" type="date" name="expries_at" required />
-    </div>
-    <div class="col">
-      <button style="margin-top: 20px;" type="submit" class="btn btn-primary">Xác nhận</button>
-    </div>
-  </div>
-</form>
+  </form>
 
 </div>
 
 <div id="chartColumn" style="margin-bottom: 35px; margin-top: 35px"></div>
+<div style="
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+">
 
-<script src="/js/columnChart.js"></script>  
+  <div id="pieChart" style="width: 45%"></div>
+  <div id="lineChart" style="width: 45%"></div>
+
+</div>
+<script src="/js/columnChart.js" months="<%= months %>" totalBills="<%= totalBills %>"
+  totalBillsProduct="<%= totalBillsProduct %>" totalInterests="<%= totalInterests %>"></script>
+<script src="/js/pieChart.js"></script>
+<script src="/js/lineChart.js"></script>

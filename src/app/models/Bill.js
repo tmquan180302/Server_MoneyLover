@@ -11,7 +11,7 @@ const billSchema = new schema({
         type: mongoose.Schema.Types.ObjectId, ref: 'User',
         require: true
     },
-    premium: {
+    service: {
         type: Object,
         require: true
     },
@@ -19,10 +19,6 @@ const billSchema = new schema({
         type: Number,
         require: true,
         default: moment().valueOf(),
-    },
-    dayEnd: {
-        type: Number,
-        require: true,
     },
     createdAt: String,
     updatedAt: String,

@@ -1,51 +1,85 @@
-
+var months = document.currentScript.getAttribute('months');
+months = JSON.parse(months)
+var totalBills = document.currentScript.getAttribute('totalBills');
+totalBills = JSON.parse(totalBills)
+var totalBillsProduct = document.currentScript.getAttribute('totalBillsProduct');
+totalBillsProduct = JSON.parse(totalBillsProduct)
+var totalInterests = document.currentScript.getAttribute('totalInterests');
+totalInterests = JSON.parse(totalInterests)
 
 var options = {
-    chart: {
-        type: 'column'
-    },
     title: {
-        text: 'Corn vs wheat estimated production for 2020',
-        align: 'left'
-    },
-    subtitle: {
-        text:
-            'Source: <a target="_blank" ' +
-            'href="https://www.indexmundi.com/agriculture/?commodity=corn">indexmundi</a>',
-        align: 'left'
-    },
-    xAxis: {
-        categories: ['USA', 'China', 'Brazil', 'EU', 'India', 'Russia'],
-        crosshair: true,
-        accessibility: {
-            description: 'Countries'
-        }
-    },
-    yAxis: {
-        min: 0,
-        title: {
-            text: '1000 metric tons (MT)'
-        }
-    },
-    tooltip: {
-        valueSuffix: ' (1000 MT)'
-    },
-    plotOptions: {
-        column: {
-            pointPadding: 0.2,
-            borderWidth: 0
-        }
+        text: 'Bảng thống kê doanh thu',
+        align: 'center',
+        style: {
+            fontSize: '23px',
+            fontWeight: 'bold',
+            fontFamily: 'Arial, Helvetica, sans-serif',
+            color: '#263238'
+        },
     },
     series: [
         {
-            name: 'Corn',
-            data: [406292, 260000, 107000, 68300, 27500, 14500]
+            name: 'Doanh thu',
+            data: totalBills
         },
         {
-            name: 'Wheat',
-            data: [51086, 136000, 5500, 141000, 107180, 77000]
+            name: 'Chi phí',
+            data: totalBillsProduct
+        },
+        {
+            name: 'Lợi nhuận',
+            data: totalInterests
         }
-    ]
+    ],
+    colors: [
+        'rgb(0, 227, 150)',
+        'rgb(0, 143, 251)',
+        'rgb(254, 176, 25)'
+    ],
+    chart: {
+        type: 'bar',
+        height: 350
+    },
+    plotOptions: {
+        bar: {
+            distributed: false,
+            horizontal: false,
+            columnWidth: '55%',
+            endingShape: 'rounded'
+        },
+    },
+    dataLabels: {
+        enabled: false
+    },
+    stroke: {
+        show: true,
+        width: 2,
+        colors: ['transparent']
+    },
+    xaxis: {
+        categories: months,
+    },
+    yaxis: {
+        title: {
+            text: 'vnd (dong)'
+        },
+        labels: {
+            formatter: function (val) {
+                return Number(val).toLocaleString()
+            }
+        },
+    },
+    fill: {
+        opacity: 1
+    },
+    tooltip: {
+        y: {
+            formatter: function (val) {
+                return Number(val).toLocaleString() + " dong"
+            }
+        }
+    }
 };
 
 var chart = new ApexCharts(document.querySelector("#chartColumn"), options);

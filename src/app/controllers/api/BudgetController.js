@@ -40,7 +40,7 @@ class BudgetController {
 
         const { category, type, dayStart, dayEnd, note, price, frequency } = req.body;
         const budget = new Budget({
-            user: req.user._id,
+            userId: req.userId,
             category: category,
             type: type,
             dayStart: dayStart,
