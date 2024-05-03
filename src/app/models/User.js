@@ -15,6 +15,10 @@ const userSchema = new schema({
         type: String,
         require: true
     },
+    fullName: {
+        type: String,
+        require: false
+    },
     phone: {
         type: Number,
         required: false

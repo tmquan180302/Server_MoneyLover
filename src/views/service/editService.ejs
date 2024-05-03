@@ -1,0 +1,86 @@
+<div class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 class="h2">Gói Premium</h1>
+  <div class="btn-toolbar mb-2 mb-md 0">
+    <div class="btn-group me-2">
+
+    </div>
+  </div>
+</div>
+
+<div class="col py-3">
+  <div class="row">
+    <div class="col">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/service">Dịch vụ</a></li>
+          <li class="breadcrumb-item active">Sửa thông tin gói premium</li>
+        </ol>
+      </nav>
+    </div>
+    <div class="col text-end fw-lighter">
+
+    </div>
+  </div>
+</div>
+
+<form id="premiumForm" action="/service/<%=data._id%>/edit" method="POST">
+  <div class="row form-group mb-4">
+    <div class="col">
+      <label for="name">Tên gói:</label>
+      <input type="text" class="form-control" id="name" name="name" value="<%=data.name %>" placeholder="Tên gói"
+        required />
+    </div>
+  </div>
+
+  <div class="row form-group mb-4">
+
+    <div class="col">
+      <label for="price">Giá:</label>
+      <input type="number" class="form-control" id="price" name="price" value="<%=data.price  %>" placeholder="Giá"
+        required />
+    </div>
+  </div>
+
+  <div class="row form-group mb-4">
+    <div class="col">
+      <label for="description">Mô tả:</label>
+      <input type="text" class="form-control" id="description" name="description" value="<%=data.description%>"
+        placeholder="Mô tả" required />
+    </div>
+  </div>
+
+  <div class="row form-group mb-4">
+    <div class="col">
+      <label for="time">Thời gian: (tháng)</label>
+      <input type="hidden" id="timeOriginal" name="timeOriginal">
+      <input type="number" class="form-control" id="time" name="time" value="<%=data.time/2629743000%>"
+        placeholder="1 tháng... vv" required />
+    </div>
+  </div>
+
+
+  <div class="form-group mb-4">
+    <button type="submit" id="submitBtn" class="btn btn-primary">Xác nhận</button>
+  </div>
+</form>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var timeInput = document.getElementById('time');
+    var timeOriginalInput = document.getElementById('timeOriginal');
+    var form = document.getElementById('premiumForm');
+    var submitBtn = document.getElementById('submitBtn');
+
+    timeInput.addEventListener('input', function () {
+      var timeValue = timeInput.value;
+      timeOriginalInput.value = timeValue;
+    });
+
+    submitBtn.addEventListener('click', function () {
+      var timeValue = timeOriginalInput.value;
+      var multipliedTime = timeValue * 2629743000;
+      timeInput.value = multipliedTime;
+      form.submit();
+    });
+  });
+</script>

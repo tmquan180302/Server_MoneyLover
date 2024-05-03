@@ -1,4 +1,6 @@
 const Category = require('../../models/Category');
+const Transaction = require('../../models/Transaction');
+const Budget = require('../../models/Budget');
 
 class CategoryController {
 
@@ -20,9 +22,7 @@ class CategoryController {
     async showExpense(req, res, next) {
 
         try {
-            console.log(req.userId)
             const data = await Category.find({ userId: req.userId, type: 0 });
-            console.log(data)
             res.json(data);
         } catch (err) {
             console.error('Error fetching category:', err);
@@ -85,14 +85,19 @@ class CategoryController {
         const id = req.params.id;
         const { type, name, icon, color } = req.body;
         const data = {
+            _id: id,
             type: type,
             name: name,
             icon: icon,
-            color: color
+            color: color,
+            userId: req.userId
         };
 
         try {
             await Category.updateOne({ _id: id }, data, { new: true });
+            await Transaction.updateMany({ "category._id": id }, { category: data });
+            await Budget.updateMany({ "category._id": id }, { category: data });
+
             res.status(200).json("Cập nhật thành công");
         } catch (error) {
             res.status(400).json(error.message);

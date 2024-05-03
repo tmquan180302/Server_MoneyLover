@@ -55,9 +55,9 @@ class UserController {
     //[POST] user/register
     async create(req, res, next) {
         try {
-            const { email, passWord } = req.body;
+            const { email, passWord, fullName } = req.body;
             const hassPass = bcrypt.hashSync(passWord, salt);
-            const data = new User({ email: email, passWord: hassPass });
+            const data = new User({ email: email, passWord: hassPass, fullName: fullName });
 
             const user = await data.save()
             res.json(user);

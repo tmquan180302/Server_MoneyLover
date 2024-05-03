@@ -8,7 +8,7 @@ function authenToken(req, res, next) {
         const token = authorizationHeader.split(' ')[1];
         const data = jwt.verify(token, process.env.TOKEN_SEC_KEY);
         req.userId = data.user._id;
-        console.log("req.userId",req.userId);
+        console.log("req.userId", req.userId);
         next();
     } catch (error) {
         console.log(error);
@@ -18,6 +18,14 @@ function authenToken(req, res, next) {
 
 };
 
+async function checkAdmin(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next()
+    }
+    res.redirect('/user/login')
+}
+
 module.exports = {
     authenToken,
+    checkAdmin
 };

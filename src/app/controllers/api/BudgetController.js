@@ -1,9 +1,13 @@
-const { repeatOptions } = require('../../../util/options');
+const { repeatOptions } = require('../../../utils/options');
 const Budget = require('../../models/Budget');
 const moment = require('moment-timezone');
+const path = require('path');
 const Transaction = require('../../models/Transaction');
 const Balance = require('../../models/Balance');
-
+const { createObjectCsvWriter } = require('csv-writer');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const generateNewBudgets = require('../../../service/budget');
 
 class BudgetController {
 
@@ -25,7 +29,8 @@ class BudgetController {
     async show(req, res, next) {
 
         try {
-            const budget = await Budget.findOne(req.params.id);
+            const budget = await Budget.findOne({ _id: req.params.id });
+            console.log(req.params.id);
             res.json(budget)
         } catch (err) {
             console.error('Error fetching budget:', err);
@@ -33,7 +38,6 @@ class BudgetController {
         }
 
     }
-
 
     //[POST] budget/create
     async create(req, res, next) {
@@ -44,7 +48,7 @@ class BudgetController {
             category: category,
             type: type,
             dayStart: dayStart,
-            dayEnd: dayEnd,
+            dayEnd: (dayEnd !== 0) ? dayEnd : null,
             note: note,
             price: price,
             frequency: frequency
@@ -67,7 +71,7 @@ class BudgetController {
             category: category,
             type: type,
             dayStart: dayStart,
-            dayEnd: dayEnd,
+            dayEnd: (dayEnd !== 0) ? dayEnd : null,
             note: note,
             price: price,
             frequency: frequency
@@ -81,7 +85,6 @@ class BudgetController {
         }
 
     }
-
 
     async destroy(req, res, next) {
 
@@ -111,264 +114,7 @@ class BudgetController {
             },);
 
 
-            const newBudgets = [];
-            budgets.forEach(budget => {
-
-                const { frequency } = budget;
-
-                if (repeatOptions.includes(frequency)) {
-                    const budgetStart = moment(budget.dayStart);
-
-
-                    switch (frequency) {
-                        case 'Daily':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            }
-                            break;
-                        case 'Weekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            }
-                            break;
-                        case 'Biweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            }
-                            break;
-                        case 'Triweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            }
-                            break;
-                        case 'Quadweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            }
-                            break;
-
-                        case 'Monthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            }
-                            break;
-                        case 'Bimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            }
-                            break;
-                        case 'Trimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quadmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quinmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            }
-                            break;
-                        case 'Semiannually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            }
-                            break;
-                        case 'Annually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-            });
+            const newBudgets = generateNewBudgets(budgets);
 
             newBudgets.forEach(budget => {
                 delete budget.deleted;
@@ -473,7 +219,6 @@ class BudgetController {
         }
     }
 
-
     // đã sửa
     async getReport(req, res) {
         try {
@@ -488,266 +233,7 @@ class BudgetController {
                 day: { $gte: startDay, $lte: endDay }
             },);
 
-
-            const newBudgets = [];
-            budgets.forEach(budget => {
-
-                const { frequency } = budget;
-
-                if (repeatOptions.includes(frequency)) {
-                    const budgetStart = moment(budget.dayStart);
-
-
-                    switch (frequency) {
-                        case 'Daily':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            }
-                            break;
-                        case 'Weekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            }
-                            break;
-                        case 'Biweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            }
-                            break;
-                        case 'Triweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            }
-                            break;
-                        case 'Quadweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            }
-                            break;
-
-                        case 'Monthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            }
-                            break;
-                        case 'Bimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            }
-                            break;
-                        case 'Trimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quadmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quinmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            }
-                            break;
-                        case 'Semiannually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            }
-                            break;
-                        case 'Annually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-            });
-
+            const newBudgets = generateNewBudgets(budgets);
 
             newBudgets.forEach(budget => {
                 delete budget.deleted;
@@ -761,10 +247,11 @@ class BudgetController {
 
                 }
             });
-
+            
             const filterDay = newBudgets.filter(item => {
                 return item.day >= startDay && item.day <= endDay;
             })
+
 
             const merge = [...filterDay, ...transactions];
 
@@ -855,7 +342,6 @@ class BudgetController {
                 total: revenue - expense,
                 category: convertedArray
             }
-
             res.json(result);
         } catch (error) {
             console.error(error);
@@ -870,7 +356,7 @@ class BudgetController {
             const today = moment().startOf('day');
 
             const budgets = await Budget.find({
-                userId: req.userId,
+                userId: req.userId
 
             });
 
@@ -880,266 +366,7 @@ class BudgetController {
             },);
 
             // Tạo budget con 
-            const newBudgets = [];
-            budgets.forEach(budget => {
-
-                const { frequency } = budget;
-
-                if (repeatOptions.includes(frequency)) {
-                    const budgetStart = moment(budget.dayStart);
-
-
-                    switch (frequency) {
-                        case 'Daily':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            }
-                            break;
-                        case 'Weekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            }
-                            break;
-                        case 'Biweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            }
-                            break;
-                        case 'Triweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            }
-                            break;
-                        case 'Quadweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            }
-                            break;
-
-                        case 'Monthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            }
-                            break;
-                        case 'Bimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            }
-                            break;
-                        case 'Trimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quadmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quinmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            }
-                            break;
-                        case 'Semiannually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            }
-                            break;
-                        case 'Annually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-            });
-            //------------------------------
-
+            const newBudgets = generateNewBudgets(budgets);
 
             newBudgets.forEach(budget => {
                 delete budget.deleted;
@@ -1292,6 +519,8 @@ class BudgetController {
                 const result = {
                     sum: sum1 - sum,
                     average: average1 - average,
+                    revenue: sum1,
+                    expense: sum,
                     chart: chart,
                 }
                 res.json(result);
@@ -1303,7 +532,6 @@ class BudgetController {
             res.status(500).json({ message: 'Internal Server Error' });
         }
     }
-
 
     // đã sửa
     async getAllReport(req, res) {
@@ -1318,266 +546,7 @@ class BudgetController {
                 userId: req.userId,
             },);
 
-
-            const newBudgets = [];
-            budgets.forEach(budget => {
-
-                const { frequency } = budget;
-
-                if (repeatOptions.includes(frequency)) {
-                    const budgetStart = moment(budget.dayStart);
-
-
-                    switch (frequency) {
-                        case 'Daily':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            }
-                            break;
-                        case 'Weekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            }
-                            break;
-                        case 'Biweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            }
-                            break;
-                        case 'Triweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            }
-                            break;
-                        case 'Quadweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            }
-                            break;
-
-                        case 'Monthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            }
-                            break;
-                        case 'Bimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            }
-                            break;
-                        case 'Trimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quadmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quinmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            }
-                            break;
-                        case 'Semiannually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            }
-                            break;
-                        case 'Annually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-            });
-
+            const newBudgets = generateNewBudgets(budgets);
 
             newBudgets.forEach(budget => {
                 delete budget.deleted;
@@ -1654,7 +623,6 @@ class BudgetController {
     async searchAll(req, res) {
         try {
             const { key } = req.body;
-            const today = moment().startOf('day');
 
             const budgets = await Budget.find({
                 userId: req.userId
@@ -1662,267 +630,10 @@ class BudgetController {
             const transactions = await Transaction.find({
                 userId: req.userId,
             },);
+            
+            console.log(key);
 
-
-            const newBudgets = [];
-            budgets.forEach(budget => {
-
-                const { frequency } = budget;
-
-                if (repeatOptions.includes(frequency)) {
-                    const budgetStart = moment(budget.dayStart);
-
-
-                    switch (frequency) {
-                        case 'Daily':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            }
-                            break;
-                        case 'Weekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            }
-                            break;
-                        case 'Biweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            }
-                            break;
-                        case 'Triweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            }
-                            break;
-                        case 'Quadweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            }
-                            break;
-
-                        case 'Monthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            }
-                            break;
-                        case 'Bimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            }
-                            break;
-                        case 'Trimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quadmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quinmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            }
-                            break;
-                        case 'Semiannually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            }
-                            break;
-                        case 'Annually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-            });
-
+            const newBudgets = generateNewBudgets(budgets);
 
             newBudgets.forEach(budget => {
                 delete budget.deleted;
@@ -1993,268 +704,7 @@ class BudgetController {
                 userId: req.userId,
             },);
 
-
-
-
-            const newBudgets = [];
-            budgets.forEach(budget => {
-
-                const { frequency } = budget;
-
-                if (repeatOptions.includes(frequency)) {
-                    const budgetStart = moment(budget.dayStart);
-
-
-                    switch (frequency) {
-                        case 'Daily':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            }
-                            break;
-                        case 'Weekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            }
-                            break;
-                        case 'Biweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            }
-                            break;
-                        case 'Triweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            }
-                            break;
-                        case 'Quadweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            }
-                            break;
-
-                        case 'Monthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            }
-                            break;
-                        case 'Bimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            }
-                            break;
-                        case 'Trimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quadmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quinmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            }
-                            break;
-                        case 'Semiannually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            }
-                            break;
-                        case 'Annually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-            });
-
+            const newBudgets = generateNewBudgets(budgets);
 
             newBudgets.forEach(budget => {
                 delete budget.deleted;
@@ -2357,267 +807,8 @@ class BudgetController {
             },);
 
 
-            // Tạo budget con 
-            const newBudgets = [];
-            budgets.forEach(budget => {
-
-                const { frequency } = budget;
-
-                if (repeatOptions.includes(frequency)) {
-                    const budgetStart = moment(budget.dayStart);
-
-
-                    switch (frequency) {
-                        case 'Daily':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'day');
-                                }
-                            }
-                            break;
-                        case 'Weekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'week');
-                                }
-                            }
-                            break;
-                        case 'Biweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'week');
-                                }
-                            }
-                            break;
-                        case 'Triweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'week');
-                                }
-                            }
-                            break;
-                        case 'Quadweekly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'week');
-                                }
-                            }
-                            break;
-
-                        case 'Monthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'month');
-                                }
-                            }
-                            break;
-                        case 'Bimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(2, 'month');
-                                }
-                            }
-                            break;
-                        case 'Trimonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(3, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quadmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(4, 'month');
-                                }
-                            }
-                            break;
-                        case 'Quinmonthly':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(5, 'month');
-                                }
-                            }
-                            break;
-                        case 'Semiannually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(6, 'month');
-                                }
-                            }
-                            break;
-                        case 'Annually':
-
-                            if (budget.dayEnd == null) {
-                                while (budgetStart.isSameOrBefore(today)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            } else {
-                                while (budgetStart.isSameOrBefore(budget.dayEnd)) {
-                                    const newBudget = { ...budget.toObject() };
-                                    newBudget.dayStart = budgetStart.valueOf();
-
-                                    newBudgets.push(newBudget);
-                                    budgetStart.add(1, 'year');
-                                }
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-            });
-            //------------------------------
-
+            // Tạo transaction con 
+            const newBudgets = generateNewBudgets(budgets);
 
             newBudgets.forEach(budget => {
                 delete budget.deleted;
@@ -2629,7 +820,6 @@ class BudgetController {
 
                 }
             });
-
 
             const merge = [...newBudgets, ...transactions];
 
@@ -2646,11 +836,194 @@ class BudgetController {
                 }
                 totals[type] += record.price;
             });
-            totals["total"] = totals["revenue"] - totals["expense"];
-            totals["balance"] = balance.price;
+            totals["total"] = totals["revenue"] ? totals["revenue"] : 0 - totals["expense"] ? totals["expense"] : 0 ;
+            totals["balance"] = balance ? balance.price : 0;
             totals["cumulation"] = totals["total"] + totals["balance"];
 
             res.json(totals);
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    }
+
+    async exportData(req, res) {
+        try {
+
+            const today = moment().startOf('day');
+            const budgets = await Budget.find({
+                userId: req.userId,
+
+            });
+
+            const transactions = await Transaction.find({
+                userId: req.userId,
+            }).lean();;
+
+            // Tạo budget con 
+            const newBudgets = generateNewBudgets(budgets);
+
+            newBudgets.forEach(budget => {
+                delete budget.deleted;
+                if (budget.hasOwnProperty("dayStart")) {
+                    budget.day = budget.dayStart;
+                    delete budget.dayStart;
+                }
+            });
+
+
+            const merge = [...newBudgets, ...transactions];
+
+            const modifiedData = merge.map(item => ({
+                ...item,
+                category: item.category.name
+            }));
+            const csvWriter = createObjectCsvWriter({
+                path: path.join(__dirname, '../../../public/file', req.userId + '.csv'), // Đường dẫn đến thư mục upload/output.csv
+                header: [
+                    { id: 'category', title: 'Danh mục' },
+                    { id: 'note', title: 'Ghi chú' },
+                    { id: 'price', title: 'Giá' },
+                    { id: 'day', title: 'Ngày giao dịch' },
+                    { id: 'createdAt', title: 'Ngày tạo' },
+                    { id: 'updatedAt', title: 'Ngày sửa' },
+
+                ]
+            });
+            csvWriter.writeRecords(modifiedData);
+            res.status(200).json({ link: 'file/' + req.userId + '.csv' });
+
+
+
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    }
+
+    async exportDataPdf(req, res) {
+        try {
+
+            const today = moment().startOf('day');
+            const budgets = await Budget.find({
+                userId: req.userId,
+
+            });
+
+            const transactions = await Transaction.find({
+                userId: req.userId,
+            }).lean();;
+
+            // Tạo budget con 
+            const newBudgets = generateNewBudgets(budgets);
+
+
+            newBudgets.forEach(budget => {
+                delete budget.deleted;
+                if (budget.hasOwnProperty("dayStart")) {
+                    budget.day = budget.dayStart;
+                    delete budget.dayStart;
+                }
+            });
+
+
+            const merge = [...newBudgets, ...transactions];
+
+            const modifiedData = merge.map(item => ({
+                ...item,
+                category: item.category.name
+            }));
+
+            function convertMillisecondsToNormalDate(milliseconds) {
+                const date = new Date(milliseconds);
+                const day = date.getDate();
+                const month = date.getMonth() + 1;
+                const year = date.getFullYear();
+                return `${year}-${month}-${day}`;
+            }
+            modifiedData.forEach(item => {
+                // Chuyển đổi giá thành chuỗi
+                item.price = item.price.toString();
+                item.day = convertMillisecondsToNormalDate(item.day);
+                item.createdAt = convertMillisecondsToNormalDate(item.createdAt);
+                item.updatedAt = convertMillisecondsToNormalDate(item.updatedAt);
+
+            });
+
+
+            // Tạo một tài liệu PDF mới
+            const doc = new PDFDocument();
+            // Pipe PDF vào một file stream
+            const stream = fs.createWriteStream('./src/public/file/' + req.userId + '.pdf');
+            doc.pipe(stream);
+
+            // Tạo bảng
+            const table = {
+                headers: ['Category', 'Note', 'Price', 'Day', 'CreatedAt', 'UpdatedAt',],
+                rows: []
+            };
+
+            // Thêm dữ liệu từ mảng students vào bảng
+            modifiedData.forEach(item => {
+                table.rows.push([item.category, item.note, item.price, item.day, item.createdAt, item.updatedAt]);
+            });
+
+            // Vẽ bảng
+            drawTable(doc, {
+                x: 50,
+                y: 50,
+                table: table
+            });
+
+            // Kết thúc và đóng tài liệu PDF
+            doc.end();
+            res.status(200).json({ link: 'file/' + req.userId + '.pdf' })
+
+
+            // Hàm để vẽ bảng trong PDF
+            function drawTable(doc, options) {
+                const startX = options.x;
+                const startY = options.y;
+
+                const table = options.table;
+                const cellMargin = 10;
+
+                const usableWidth = options.width || 500;
+
+                const columnCount = table.headers.length;
+                const rowCount = table.rows.length;
+
+                const columnWidth = usableWidth / columnCount;
+
+                // Vẽ tiêu đề
+                doc.font('Helvetica-Bold');
+                table.headers.forEach((header, i) => {
+                    doc.text(header, startX + i * columnWidth, startY);
+                });
+
+                // Vẽ dòng ngăn cách giữa tiêu đề và nội dung
+                doc.moveTo(startX, startY + 15)
+                    .lineTo(startX + usableWidth, startY + 15)
+                    .stroke();
+
+                // Vẽ nội dung của bảng
+                table.rows.forEach((row, rowIndex) => {
+                    row.forEach((cell, cellIndex) => {
+                        doc.font('Helvetica')
+                            .text(cell, startX + cellIndex * columnWidth, startY + 20 + (rowIndex + 1) * 30);
+                    });
+                });
+
+                // Vẽ dòng ngăn cách giữa các dòng dữ liệu
+                table.rows.forEach((row, rowIndex) => {
+                    doc.moveTo(startX, startY + 35 + (rowIndex + 1) * 30)
+                        .lineTo(startX + usableWidth, startY + 35 + (rowIndex + 1) * 30)
+                        .stroke();
+                });
+            }
+
 
         } catch (error) {
             console.error(error);

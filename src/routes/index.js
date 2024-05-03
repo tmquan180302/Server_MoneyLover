@@ -4,22 +4,39 @@ const categoryRouter = require('./api/category');
 const budgetRouter = require('./api/budget');
 const balanceRouter = require('./api/balance');
 const billRouter = require('./api/bill');
-const serviceRouter = require('./web/service');
+const serviceRouter = require('./api/service');
+
+
+const serviceWebRouter = require('./web/service');
 const userWebRouter = require('./web/user');
+const billWebRouter = require('./web/bill');
+const transactionWebRouter = require('./web/transaction');
+const { checkAdmin } = require('../middlewares/auth');
+
+
+
 
 
 function route(app) {
-    app.use('/user', userRouter);
-    app.use('/transaction', transactionRouter);
-    app.use('/category', categoryRouter);
-    app.use('/budget', budgetRouter);
-    app.use('/balance', balanceRouter);
-    app.use('/bill', billRouter);
+    app.use('/api/user', userRouter);
+    app.use('/api/transaction', transactionRouter);
+    app.use('/api/category', categoryRouter);
+    app.use('/api/budget', budgetRouter);
+    app.use('/api/balance', balanceRouter);
+    app.use('/api/bill', billRouter);
+    app.use('/api/service', serviceRouter);
 
 
+    app.get('/', checkAdmin, (req, res) => {
+        res.redirect('/bill/dashboard');
+    })
 
-    app.use('/web/user', userWebRouter);
-    app.use('/web/service', serviceRouter);
+    app.use('/user', userWebRouter);
+    app.use('/service', serviceWebRouter);
+    app.use('/bill', billWebRouter);
+    app.use('/transaction', transactionWebRouter);
+
+
 
 
 

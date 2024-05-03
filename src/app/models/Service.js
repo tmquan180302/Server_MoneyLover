@@ -6,7 +6,10 @@ const moment = require('moment-timezone');
 const schema = mongoose.Schema;
 
 const serviceSchema = new schema({
-
+    name: {
+        type: String,
+        required: true,
+    },
     price: {
         type: Number,
         require: true

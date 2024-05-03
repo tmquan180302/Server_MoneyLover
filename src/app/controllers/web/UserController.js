@@ -1,32 +1,97 @@
+const { response } = require('express');
 const User = require('../../models/User');
+const bcrypt = require('bcrypt');
 
 class UserController {
 
-    test(req, res, next) {
-        try {
-            const months = [
-                'Tháng 10 năm 2023',
-                'Tháng 11 năm 2023',
-                'Tháng 12 năm 2023',
-                'Tháng 1 năm 2024',
-                'Tháng 2 năm 2024',
-                'Tháng 3 năm 2024'
-            ];
-            const totalBills = [45980000, 65828119.99999999, 61920000, 16785920, 0, 0];
-            const totalBillsProduct = [-26500000, -63998000, -55920000, -18520000, 0, 0];
-            const totalInterests = [19480000, 1830119.9999999925, 6000000, -1734080, 0, 0];
-            res.render('dashboard/dashboard', {
-                months: JSON.stringify(months),
-                totalBills: JSON.stringify(totalBills),
-                totalBillsProduct: JSON.stringify(totalBillsProduct),
-                totalInterests: JSON.stringify(totalInterests),
+    async pageLogin(req, res) {
+        res.render("auth/login.ejs", { layout: "layouts/auth", data: null, title: "Đăng nhập" });
+    }
 
-            });
+    async login(req, res, next) {
+        const { email, passWord } = req.body;
+        try {
+            const user = await User.findOne({ email: email, role: "admin" });
+
+            if (!user) {
+                throw "Không tìm thấy người dùng";
+            }
+            const hashPassword = user.passWord;
+            const matches = await bcrypt.compare(passWord, hashPassword);
+            if (!matches) {
+                throw "Tên đăng nhập hoặc mật khẩu không hợp lệ";
+            }
+            // res.redirect("/bill");
+            res.json("ok");
         } catch (error) {
-            console.log(error);
-            res.send(error);
+            data.error = error;
+            console.log(data);
+            res.render("auth/login.ejs", {
+                layout: "layouts/auth",
+                data: data,
+            });
         }
     }
+
+    async show(req, res) {
+
+        try {
+            const array = await User.find();
+            console.log(array.length);
+            res.render("user/viewUser", {
+                layout: "layouts/main",
+                data: array,
+                title: "Người dùng",
+            });
+        } catch (error) {
+            res.json(error);
+        }
+
+    };
+    async showUser(req, res) {
+
+        try {
+            const array = await User.findOne({_id : req.params.id});
+
+            res.render("user/detailUser", {
+                layout: "layouts/main",
+                data: array,
+                title: "Chi tiết người dùng",
+            });
+        } catch (error) {
+            res.json(error);
+        }
+
+    };
+    async create(req, res) {
+
+        try {
+            const array = await User.find();
+            
+            res.render("user/viewUser", {
+                layout: "layouts/main",
+                data: array,
+                title: "Người dùng",
+            });
+        } catch (error) {
+            res.json(error);
+        }
+
+    };
+
+    async logout(req, res) {
+        res.render("auth/logout", { layout: "layouts/main", title: "Đăng xuất" });
+    }
+    
+    async logoutP(req, res) {
+        req.logout(function (err) {
+          if (err) {
+            return next(err);
+          }
+          res.redirect("/");
+        });
+      }
+
 }
 
 module.exports = new UserController();

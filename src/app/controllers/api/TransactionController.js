@@ -58,6 +58,7 @@ class TransactionController {
     async update(req, res, next) {
         const id = req.params.id;
         const { category, type, day, note, price } = req.body;
+        console.log(req.body);
         const data = {
             category: category,
             type: type,
@@ -91,10 +92,42 @@ class TransactionController {
     }
 
 
-    //[GET] transaction/calendarScreen
+    //[GET] transaction/export
+    async getListDeleted(req, res, next) {
 
+        try {
+            const transactions = await Transaction.findDeleted({ userId: req.userId });
+            res.status(200).json(transactions);
+        } catch (err) {
+            console.error('Error fetching Transaction:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
 
+    }
 
+    async restore(req, res, next) {
+
+        try {
+            await Transaction.findOneAndUpdateDeleted({ _id: req.params.id }, {deleted : false});
+            res.status(200).json('Khôi phục thành công');
+        } catch (err) {
+            console.error('Error fetching Transaction:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+
+    }
+
+    async forceDestroy(req, res, next) {
+
+        try {
+            await Transaction.deleteOne({ _id: req.params.id });
+            res.status(200).json('Xóa vĩnh viễn thành công');
+        } catch (err) {
+            console.error('Error fetching Transaction:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+
+    }
 
 
 

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const mongooseDelete = require('mongoose-delete');
 const moment = require('moment-timezone');
-const { repeatOptions } = require('../../util/options');
+const { repeatOptions } = require('../../utils/options');
 
 
 const schema = mongoose.Schema;

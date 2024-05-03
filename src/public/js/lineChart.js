@@ -1,24 +1,36 @@
+var monthLineChart = document.currentScript.getAttribute('monthLineChart');
+monthLineChart = JSON.parse(monthLineChart)
+var userLineChart = document.currentScript.getAttribute('userLineChart');
+userLineChart = JSON.parse(userLineChart)
+
 var options = {
     series: [{
-        name: "Desktops",
-        data: [10, 41, 35, 51, 49, 62, 69, 91, 148]
+        name: 'Người đăng ký',
+        data: userLineChart,
     }],
     chart: {
         height: 350,
         type: 'line',
         zoom: {
-            enabled: false
-        }
+            enabled: true,
+            type: 'x'
+        },
     },
     dataLabels: {
-        enabled: false
+        enabled: true,
     },
     stroke: {
         curve: 'straight'
     },
     title: {
-        text: 'Product Trends by Month',
-        align: 'left'
+        text: 'Bảng thống kê tài khoản đã đăng ký',
+        align: 'center',
+        style: {
+            fontSize: '15px',
+            fontWeight: 'bold',
+            fontFamily: 'Arial, Helvetica, sans-serif',
+            color: '#263238'
+        },
     },
     grid: {
         row: {
@@ -27,8 +39,10 @@ var options = {
         },
     },
     xaxis: {
-        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-    }
+        categories: monthLineChart,
+
+    },
+
 };
 
 var chart = new ApexCharts(document.querySelector("#lineChart"), options);

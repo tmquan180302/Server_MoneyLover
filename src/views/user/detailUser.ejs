@@ -1,0 +1,62 @@
+<div class="d-flex justify-content-between flex-wrap flex-md nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Chi tiết người dùng</h1>
+    <div class="btn-toolbar mb-2 mb-md 0">
+      <div class="btn-group me-2">
+        
+      </div>
+    </div>
+  </div>
+  
+  <div class="col py-3">
+  
+    <div class="row">
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/user">Người dùng</a></li>
+            <li class="breadcrumb-item active"><%= data.email  %></li>
+          </ol>
+        </nav>
+      </div>
+      <div class="col text-end fw-lighter">
+
+      </div>
+    </div>
+  
+  </div>
+  
+  <ul class="list-group">
+  
+  
+    <li class="list-group-item"> 
+      <div class="row">
+        <div class="col" style="max-width: 140px"> <b>Họ và tên:</b></div>
+        <div class="col"><%= data.fullName ? data.fullName : "Chưa cập nhật" %></div>
+      </div>
+    </li>
+
+    <li class="list-group-item"> 
+        <div class="row">
+          <div class="col" style="max-width: 140px"> <b>Tài khoản:</b></div>
+          <div class="col"><%= data.email %></div>
+        </div>
+      </li>
+  
+      <li class="list-group-item"> 
+        <div class="row">
+          <div class="col" style="max-width: 140px"> <b>Số điện thoại:</b></div>
+          <div class="col"><%= data.phone ? data.phone : "Không có dữ liệu" %></div>
+        </div>
+      </li> 
+
+   
+    <li class="list-group-item"> 
+      <div class="row">
+        <div class="col" style="max-width: 140px"> <b>Ngày tạo:</b></div>
+        <div class="col"><%= data.createdAt.toLocaleString('en') %></div>
+      </div>
+    </li>
+  
+
+  
+  </ul>

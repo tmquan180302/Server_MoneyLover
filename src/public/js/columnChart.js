@@ -2,10 +2,7 @@ var months = document.currentScript.getAttribute('months');
 months = JSON.parse(months)
 var totalBills = document.currentScript.getAttribute('totalBills');
 totalBills = JSON.parse(totalBills)
-var totalBillsProduct = document.currentScript.getAttribute('totalBillsProduct');
-totalBillsProduct = JSON.parse(totalBillsProduct)
-var totalInterests = document.currentScript.getAttribute('totalInterests');
-totalInterests = JSON.parse(totalInterests)
+
 
 var options = {
     title: {
@@ -23,19 +20,10 @@ var options = {
             name: 'Doanh thu',
             data: totalBills
         },
-        {
-            name: 'Chi phí',
-            data: totalBillsProduct
-        },
-        {
-            name: 'Lợi nhuận',
-            data: totalInterests
-        }
+      
     ],
     colors: [
-        'rgb(0, 227, 150)',
         'rgb(0, 143, 251)',
-        'rgb(254, 176, 25)'
     ],
     chart: {
         type: 'bar',

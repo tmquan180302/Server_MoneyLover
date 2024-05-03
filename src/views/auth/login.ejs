@@ -1,0 +1,56 @@
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+
+  <div class="row border rounded-5 p-3 bg-white shadow box-area">
+
+    <div class="col-md-6 rounded-4 d-flex justify-content-center align-items-center flex-column left-box"
+      style="background: #E97338">
+      <div class="featured-image mb-3">
+        <img src="/images/logo1.jpg" class="img-fluid" style="width: 280px" />
+      </div>
+    
+    </div>
+
+
+    <div class="col-md-6 right-box">
+      <div class="row align-items-center">
+        <div class="header-text mb-4">
+          <h2>Xin chào</h2>
+          <p>Chúng tôi rất vui khi có bạn trở lại.</p>
+        </div>
+        <% if(error != ''){ %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= error %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <% } %>
+
+        <form action="/user/login" method="POST">
+          <div class="input-group mb-3">
+            <input type="email" class="form-control form-control-lg bg-light fs-6" placeholder="Nhập email"
+              name="username" id="username" value="<%= data ? data : '' %>" />
+          </div>
+          <div class="input-group mb-1">
+            <input type="password" class="form-control form-control-lg bg-light fs-6" placeholder="Mật khẩu"
+              name="password" id="password" value="" />
+          </div>
+          
+          <div class="input-group mb-5 d-flex justify-content-between">
+            <div class="form-check">
+            
+            </div>
+            <div class="forgot">
+              <small><a href="/user/email">Quên mật khẩu?</a></small>
+            </div>
+          </div>
+          <div class="input-group mb-3 " >
+            <button class="btn btn-lg btn-primary w-100 fs-6" style="background: #E97338" >Đăng nhập</button>
+          </div>
+        </form>
+        
+      </div>
+    </div>
+  </div>
+</div>
+

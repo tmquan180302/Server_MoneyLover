@@ -36,7 +36,8 @@ const transactionSchema = new schema({
 
 transactionSchema.plugin(mongooseDelete, {
     deletedAt: true,
-    overrideMethods: 'all',
+    overrideMethods: true,
+
 });
 
 
